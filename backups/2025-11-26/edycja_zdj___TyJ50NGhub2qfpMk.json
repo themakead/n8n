@@ -1,0 +1,409 @@
+{
+  "updatedAt": "2025-08-10T14:26:49.669Z",
+  "createdAt": "2025-08-04T16:02:11.000Z",
+  "id": "TyJ50NGhub2qfpMk",
+  "name": "Edycja zdjęć",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data[0].b64_json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1888,
+        32
+      ],
+      "id": "3fde8b80-26a1-4321-aa8b-da8ce352371e",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        368
+      ],
+      "id": "864f1791-9418-43b9-a814-202b94e7a4c4",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EJgMjh9fB0j2lVkm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to search the web",
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "parametersHeaders": {
+          "values": [
+            {
+              "name": "Content-Type",
+              "valueProvider": "fieldValue",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"model\": \"gpt-4o\",\n    \"tools\": [{ \"type\": \"web_search_preview\" }],\n    \"input\": \"{web_search_question}\"\n  }",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "{web_search_question}",
+              "description": "The question to search"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        784,
+        384
+      ],
+      "id": "33b98bbc-4976-4ad8-8fce-69d6205e0a2a",
+      "name": "web_search1",
+      "credentials": {
+        "openAiApi": {
+          "id": "EJgMjh9fB0j2lVkm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output;\n\n// Step 1: Clean markdown formatting if it's present\nlet cleaned = raw.replace(/```json\\\\n?|```/gi, '').trim();\n\n// Step 2: Parse JSON\nlet parsed;\ntry {\n  parsed = JSON.parse(cleaned);\n} catch (e) {\n  throw new Error('❌ Failed to parse image edit prompt JSON: ' + e.message + '\\\\n\\\\nRaw content:\\\\n' + cleaned);\n}\n\n// Step 3: Return only the prompt\nreturn [\n  {\n    json: {\n      prompt: parsed.prompt || ''\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        160
+      ],
+      "id": "1937fafa-be09-49be-bf33-025e9bbb9ec9",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Description of image that was supplied: <description>{{ $json.content }}</description>\nThe User's request of what to modify: <modify>{{ $('Webhook').item.json.body.operation }}</modify>",
+        "options": {
+          "systemMessage": "Jesteś **Agentem Modyfikacji Obrazów**.\n\nTwoim zadaniem jest otrzymanie od użytkownika krótkiej instrukcji dotyczącej sposobu, w jaki chce zmienić lub ulepszyć obraz. Otrzymujesz również krótki opis obrazu, który chce edytować. W razie potrzeby możesz użyć narzędzia `web_search1`, aby zebrać kontekst lub przykłady.\n\nTwoim zadaniem jest przełożenie prośby użytkownika na jasny i szczegółowy **monit o modyfikację obrazu**. Powinien on dokładnie opisywać, co powinna zawierać edycja, jak powinna wyglądać lub co należy dodać/usunąć/dostosować. \n\nJeśli polecenie jest usuń tło to usuń tło i nie dodawaj niczego! To bardzo ważne!\n\n### Format wyjściowy:\nOdpowiedz obiektem JSON zawierającym pojedynczy klucz:\n\n{\n\"prompt\": \"Opisowa instrukcja, która umożliwia precyzyjną modyfikację lub edycję obrazu.\"\n}\n\nUnikaj zbędnych słów. Bądź opisowy, konkretny i precyzyjny.\nUwaga: W miarę możliwości zadbaj o to, aby tekst na miniaturach był widoczny, np. w tytule."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        640,
+        160
+      ],
+      "id": "4d4395b4-1d19-454e-9c3b-c62a9a301e5f",
+      "name": "Image Editor Agent"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        1216,
+        32
+      ],
+      "id": "48764160-71c3-4288-8af3-8f1aebf40941",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const mergedItems = $input.all(); // Get both items\n\n// Flatten both JSON objects into one\nlet finalJson = {};\nlet finalBinary = {};\n\n// Loop through and merge their JSON + Binary data\nfor (const item of mergedItems) {\n  Object.assign(finalJson, item.json);\n  if (item.binary) {\n    Object.assign(finalBinary, item.binary);\n  }\n}\n\nreturn [\n  {\n    json: finalJson,\n    binary: finalBinary\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        32
+      ],
+      "id": "83a2468d-8d43-4c30-8a30-588a7d778254",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/edits",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gpt-image-1"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.prompt }}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "image[]",
+              "inputDataFieldName": "=image"
+            },
+            {
+              "name": "quality",
+              "value": "high"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1664,
+        32
+      ],
+      "id": "b58ad5da-018f-4f59-81cd-5c18bb317b2b",
+      "name": "Edit Image",
+      "credentials": {
+        "openAiApi": {
+          "id": "EJgMjh9fB0j2lVkm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "34795d55-64b2-4571-8f19-3a49817220dd",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        192,
+        32
+      ],
+      "id": "f7e16246-634c-4947-86ab-51616f941652",
+      "name": "Webhook",
+      "webhookId": "34795d55-64b2-4571-8f19-3a49817220dd"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "image/jpeg"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2112,
+        32
+      ],
+      "id": "681e4643-68de-4608-8db7-6dcdf77da307",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "inputType": "base64",
+        "binaryPropertyName": "image",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        416,
+        160
+      ],
+      "id": "f327faa9-eaa4-456b-92f4-d397b5c6b031",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "EJgMjh9fB0j2lVkm",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Image Editor Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "web_search1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Image Editor Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Image Editor Agent": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Edit Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Image Editor Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "2259ef58-9e23-43de-a97c-421a20583246",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-08-04T16:02:11.000Z",
+      "createdAt": "2025-08-04T16:02:11.000Z",
+      "role": "workflow:owner",
+      "workflowId": "TyJ50NGhub2qfpMk",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
