@@ -1,0 +1,750 @@
+{
+  "updatedAt": "2025-08-24T16:13:26.188Z",
+  "createdAt": "2025-08-13T07:20:40.796Z",
+  "id": "TjzkfYWDCYlgXm7d",
+  "name": "Uzupełnianie danych w google sheets",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "allowFileUploads": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -736,
+        -160
+      ],
+      "id": "44f78747-0478-4cdc-9096-d6248d2c8a61",
+      "name": "When chat message received",
+      "webhookId": "4391801a-5321-4cdf-a1ac-ecbfea2abdf6",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "GPT-3.5-TURBO"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "Given the following invoice text:\n\n{{$json.text}}\n\nExtract the invoice data into a single JSON object. If a value for a field is not found, set its value to null.\nThe output should have the following structure:\n\n{\n  \"numer_faktury\": null,\n  \"sprzedawca\": {\n    \"nazwa\": null,\n    \"adres\": null,\n    \"nip\": null\n  },\n  \"nabywca\": {\n    \"nazwa\": null,\n    \"adres\": null,\n    \"nip\": null\n  },\n  \"data_wystawienia\": null,\n  \"termin_platnosci\": null,\n  \"suma_netto\": null,\n  \"suma_brutto\": null\n}",
+              "role": "system"
+            },
+            {
+              "content": "=Oto treść faktury . Zwróć dane w formacie JSON:\n\n{{ $json.message }}{{ $json.text }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        240,
+        -176
+      ],
+      "id": "3859dc8d-2574-4ba1-9618-e3c8d85810c0",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EJgMjh9fB0j2lVkm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18TmTGOwAnt1dfoO7m1YTTDC1NkU8QQAIc9tZcEcFpsk",
+          "mode": "list",
+          "cachedResultName": "Baza dancyh",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18TmTGOwAnt1dfoO7m1YTTDC1NkU8QQAIc9tZcEcFpsk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 379285249,
+          "mode": "list",
+          "cachedResultName": "Faktury",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18TmTGOwAnt1dfoO7m1YTTDC1NkU8QQAIc9tZcEcFpsk/edit#gid=379285249"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Numer faktury": "={{ $json.message.content.numer_faktury }}",
+            "Termin płatności": "={{ $json.message.content.termin_platnosci }}",
+            "Suma netto": "={{ $json.message.content.suma_netto }}",
+            "Suma brutto": "={{ $json.message.content.suma_brutto }}",
+            "Sprzedawca": "={{ $json.message.content.sprzedawca.nazwa }}{{ $json.message.content.sprzedawca.adres }}{{ $json.message.content.sprzedawca.nip }}",
+            "Data wystawienia": "={{ $json.message.content.data_wystawienia }}",
+            "Nabywca": "={{ $json.message.content.nabywca.nazwa }}{{ $json.message.content.nabywca.adres }}{{ $json.message.content.nabywca.nip }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Numer faktury",
+              "displayName": "Numer faktury",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sprzedawca",
+              "displayName": "Sprzedawca",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nabywca",
+              "displayName": "Nabywca",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Data wystawienia",
+              "displayName": "Data wystawienia",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Termin płatności",
+              "displayName": "Termin płatności",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Suma netto",
+              "displayName": "Suma netto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Suma brutto",
+              "displayName": "Suma brutto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        -176
+      ],
+      "id": "5319c33b-3e4f-426c-8040-6e60640eb31b",
+      "name": "Append row in sheet",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "GPT-3.5-TURBO"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Given the following invoice text:\n\n{{$json.text}}\n\nExtract the following items into a JSON array, where each item has the fields \"nazwa\", \"ilosc\", \"cena_jednostkowa_netto\", and \"wartosc_netto\".\nIf you cannot find a specific item, or a value for a field, omit that item or leave the field value as null.\nThe items to extract are:\n* Cegła\n* Pustak\n* Nadproże\n\nThe output should be a JSON array, like this:\n\n[\n  {\n    \"nazwa\": \"Cegła\",\n    \"ilosc\": 100,\n    \"cena_jednostkowa_netto\": 2.00 zł,\n    \"wartosc_netto\": 200.00 zł\n  },\n  {\n    \"nazwa\": \"Pustak\",\n    \"ilosc\": 50,\n    \"cena_jednostkowa_netto\": 5.00 zł,\n    \"wartosc_netto\": 250.00 zł\n  },\n  {\n    \"nazwa\": \"Nadproże\",\n    \"ilosc\": 2,\n    \"cena_jednostkowa_netto\": 50.00 zł,\n    \"wartosc_netto\": 100.00 zł\n  }\n]",
+              "role": "system"
+            },
+            {
+              "content": "=Oto treść faktury . Zwróć dane w formacie JSON:\n\n{{ $json.text }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        240,
+        32
+      ],
+      "id": "1f3ac86d-4bdc-4c2c-9a81-2fcaf99a2942",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "EJgMjh9fB0j2lVkm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18TmTGOwAnt1dfoO7m1YTTDC1NkU8QQAIc9tZcEcFpsk",
+          "mode": "list",
+          "cachedResultName": "Baza dancyh",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18TmTGOwAnt1dfoO7m1YTTDC1NkU8QQAIc9tZcEcFpsk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 517378706,
+          "mode": "list",
+          "cachedResultName": "Cegły",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18TmTGOwAnt1dfoO7m1YTTDC1NkU8QQAIc9tZcEcFpsk/edit#gid=517378706"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nazwa": "={{ $json.message.content.items[0].nazwa }}",
+            "Ilość ": "={{ $json.message.content.items[0].ilosc }}",
+            "Cena za szt": "={{ $json.message.content.items[0].cena_jednostkowa_netto }}",
+            "Cena całkowita": "={{ $json.message.content.items[0].wartosc_netto }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nazwa",
+              "displayName": "Nazwa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Ilość ",
+              "displayName": "Ilość ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cena za szt",
+              "displayName": "Cena za szt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cena całkowita",
+              "displayName": "Cena całkowita",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        -16
+      ],
+      "id": "7686ea33-5ae8-4e64-9a69-34d3a67ec175",
+      "name": "Append row in sheet1",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18TmTGOwAnt1dfoO7m1YTTDC1NkU8QQAIc9tZcEcFpsk",
+          "mode": "list",
+          "cachedResultName": "Baza dancyh",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18TmTGOwAnt1dfoO7m1YTTDC1NkU8QQAIc9tZcEcFpsk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 981354090,
+          "mode": "list",
+          "cachedResultName": "Pustaki",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18TmTGOwAnt1dfoO7m1YTTDC1NkU8QQAIc9tZcEcFpsk/edit#gid=981354090"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nazwa": "={{ $json.message.content.items[1].nazwa }}",
+            "Ilość ": "={{ $json.message.content.items[1].ilosc }}",
+            "Cena za szt": "={{ $json.message.content.items[1].cena_jednostkowa_netto }}",
+            "Cena całkowita": "={{ $json.message.content.items[1].wartosc_netto }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nazwa",
+              "displayName": "Nazwa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Ilość ",
+              "displayName": "Ilość ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cena za szt",
+              "displayName": "Cena za szt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cena całkowita",
+              "displayName": "Cena całkowita",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        144
+      ],
+      "id": "b355c2c5-758f-4e12-9f8a-98dd31eff387",
+      "name": "Append row in sheet2",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "18TmTGOwAnt1dfoO7m1YTTDC1NkU8QQAIc9tZcEcFpsk",
+          "mode": "list",
+          "cachedResultName": "Baza dancyh",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18TmTGOwAnt1dfoO7m1YTTDC1NkU8QQAIc9tZcEcFpsk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1781127114,
+          "mode": "list",
+          "cachedResultName": "Nadproże",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/18TmTGOwAnt1dfoO7m1YTTDC1NkU8QQAIc9tZcEcFpsk/edit#gid=1781127114"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nazwa": "={{ $json.message.content.items[2].nazwa }}",
+            "Ilość ": "={{ $json.message.content.items[2].ilosc }}",
+            "Cena za szt": "={{ $json.message.content.items[2].cena_jednostkowa_netto }}",
+            "Cena całkowita": "={{ $json.message.content.items[2].wartosc_netto }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nazwa",
+              "displayName": "Nazwa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Ilość ",
+              "displayName": "Ilość ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cena za szt",
+              "displayName": "Cena za szt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Cena całkowita",
+              "displayName": "Cena całkowita",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        320
+      ],
+      "id": "70b03f12-45f6-41e5-9538-310fe7cee88f",
+      "name": "Append row in sheet3",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "766c3f4f-b794-4fb1-bbb4-efa3cd7ef7ba",
+                    "leftValue": "={{ $item.binary.data.mimeType }}",
+                    "rightValue": "image/jpeg",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pdf"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2b45f487-ad38-45eb-bb48-0d1deb3fe851",
+                    "leftValue": "={{ $item.binary.data.mimeType }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "image"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -544,
+        -160
+      ],
+      "id": "ee9f50af-fde8-4fef-9633-78daa5557c1c",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "={{ $json.chatInput }}",
+        "inputType": "base64",
+        "binaryPropertyName": "data0",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -208,
+        -128
+      ],
+      "id": "aa2d1ea6-9051-4f68-bcb8-e51690767eab",
+      "name": "OpenAI2",
+      "credentials": {
+        "openAiApi": {
+          "id": "EJgMjh9fB0j2lVkm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $input.item.json.content;\n\nreturn [\n  {\n    json: {\n      message: \"Please answer user question: \" + content\n    }\n  }\n];"
+      },
+      "id": "21748a8e-500e-4fc0-8b0f-118c1f5a34e3",
+      "name": "Parse Text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "data0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        16,
+        -256
+      ],
+      "id": "afa9c4e4-9482-4a3a-809a-ce987c573e01",
+      "name": "Extract from File"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append row in sheet2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append row in sheet3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OpenAI2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI2": {
+      "main": [
+        [
+          {
+            "node": "Parse Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Text": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "58e881c4-8d43-44f6-a733-0cc587807217",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-08-13T07:20:40.796Z",
+      "createdAt": "2025-08-13T07:20:40.796Z",
+      "role": "workflow:owner",
+      "workflowId": "TjzkfYWDCYlgXm7d",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
