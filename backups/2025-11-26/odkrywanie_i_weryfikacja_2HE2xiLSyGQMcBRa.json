@@ -1,0 +1,389 @@
+{
+  "updatedAt": "2025-06-16T18:25:37.176Z",
+  "createdAt": "2025-06-16T12:31:17.312Z",
+  "id": "2HE2xiLSyGQMcBRa",
+  "name": "Odkrywanie i weryfikacja",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/YOUR_ACTOR_ID/runs?token=YOUR_APIFY_TOKEN",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"keywords\": $json.query.split(',') } }}",
+        "options": {}
+      },
+      "id": "6bf9faaa-89d0-4896-ab0e-9ebbf119432e",
+      "name": "Start Apify Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        600,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.apify.com/v2/actor-runs/{{ $('Start Apify Scraper').item.json.data.id }}/dataset/items?token=YOUR_APIFY_TOKEN",
+        "options": {}
+      },
+      "id": "121d1b87-9830-48e2-be41-f895aa99e5b6",
+      "name": "Get Scraper Results",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1040,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "7a48edf0-ca5c-41e4-9e81-0faf519d1fa4",
+      "name": "Split Out Influencers",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 2.2,
+      "position": [
+        1260,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.json.average_views }}",
+              "operation": "larger",
+              "value2": 10000
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "030459ac-5384-4888-9f4d-6e71995a3902",
+      "name": "IF Average Views > 10k",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1480,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8",
+          "mode": "list",
+          "cachedResultName": "Zlecenie Useme",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1202632276,
+          "mode": "list",
+          "cachedResultName": "Tabela",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit#gid=1202632276"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Profile URL",
+              "displayName": "Profile URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Average Views",
+              "displayName": "Average Views",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "initial_email_sent_date",
+              "displayName": "initial_email_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "follow_up_1_sent_date",
+              "displayName": "follow_up_1_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "follow_up_2_sent_date",
+              "displayName": "follow_up_2_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false,
+          "values": [
+            {
+              "column": "Name",
+              "value": "={{ $json.json.name }}"
+            },
+            {
+              "column": "Email",
+              "value": "={{ $json.json.email }}"
+            },
+            {
+              "column": "Profile URL",
+              "value": "={{ $json.json.profile_url }}"
+            },
+            {
+              "column": "Average Views",
+              "value": "={{ $json.json.average_views }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "26af9fb8-c3d0-4f98-be89-d30367655e6c",
+      "name": "Add to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        1700,
+        40
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "string": [
+            {
+              "name": "status",
+              "value": "success"
+            },
+            {
+              "name": "message",
+              "value": "Discovery and vetting process completed. Qualified influencers have been added to the sheet."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "174a27b6-f032-45fa-a8b6-b5341d515b4c",
+      "name": "Final Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1700,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Run Influencer Discovery",
+        "height": 500,
+        "width": 1720
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        260,
+        -60
+      ],
+      "typeVersion": 1,
+      "id": "b83303a7-223a-48d9-a923-5d9f747c3a87",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        380,
+        140
+      ],
+      "id": "c7356dc6-a331-4b81-91c0-319b71b8d62e",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        820,
+        140
+      ],
+      "id": "7f86ebcd-0670-4148-85f0-509c4d66c72c",
+      "name": "Wait",
+      "webhookId": "8cbca098-6a33-45ff-943f-47940cfc1c97"
+    }
+  ],
+  "connections": {
+    "Get Scraper Results": {
+      "main": [
+        [
+          {
+            "node": "Split Out Influencers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Influencers": {
+      "main": [
+        [
+          {
+            "node": "IF Average Views > 10k",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Average Views > 10k": {
+      "main": [
+        [
+          {
+            "node": "Add to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Final Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Start Apify Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get Scraper Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Apify Scraper": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "f68906a8-97dd-4138-80a2-6136ea023b4c",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-06-16T12:31:17.312Z",
+      "createdAt": "2025-06-16T12:31:17.312Z",
+      "role": "workflow:owner",
+      "workflowId": "2HE2xiLSyGQMcBRa",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
