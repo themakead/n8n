@@ -1,0 +1,392 @@
+{
+  "updatedAt": "2025-08-15T09:52:57.350Z",
+  "createdAt": "2025-08-15T09:41:38.422Z",
+  "id": "AdosxWb8KJS8WyUV",
+  "name": "SEO Keyword Research",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1mZVrpNWBaAodMrCg1bp9YZKDJAC85-r6ue73tFfUwRY",
+          "mode": "list",
+          "cachedResultName": "n8n SEO Keyword Research",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1mZVrpNWBaAodMrCg1bp9YZKDJAC85-r6ue73tFfUwRY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1mZVrpNWBaAodMrCg1bp9YZKDJAC85-r6ue73tFfUwRY/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        -320
+      ],
+      "id": "36a48d91-426c-4580-9e40-0eef44e5713e",
+      "name": "Google Sheets Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "URL/HTML to PDF",
+        "convertType": "htmlToPDF",
+        "html": "={{ $json.report }}",
+        "advancedOptions": {
+          "name": "=SEO Keyword Research Report for {{ $('Google Sheets Trigger').item.json.Keyword }}"
+        }
+      },
+      "type": "n8n-nodes-pdfco.PDFco Api",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        112
+      ],
+      "id": "0688d411-2769-4c07-970c-b2db7ad600f8",
+      "name": "PDFco Api",
+      "retryOnFail": true,
+      "credentials": {
+        "pdfcoApi": {
+          "id": "qBz90V2Rg0rP76Lg",
+          "name": "PDF.co account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        96,
+        112
+      ],
+      "id": "05f59d03-f5f2-4c28-bb09-2fd63c3c8cc0",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "sendTo": "lennart@sitepoint.dk",
+        "subject": "=SEO Keyword Research Report for {{ $('Google Sheets Trigger').item.json.Keyword }}",
+        "message": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>SEO Keyword Research Email</title>\n  </head>\n  <body style=\"font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 30px; color: #333;\">\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; padding: 30px;\">\n      <tr>\n        <td align=\"left\">\n          <h2 style=\"margin-top: 0;\">Hi,</h2>\n          <p>\n            I’ve built an automation using <strong>n8n</strong> that runs SEO Keyword Research reports – and I ran one for yours.<br />\n            You’ll find the full report attached.\n          </p>\n\n          <p>\n            This Report was generated automatically, so no sales pitch here. Just some potentially useful insights.\n          </p>\n\n          <p>\n            I specialize in combining SEO and automation to help businesses uncover issues, optimize workflows, and save time.\n            If you'd like help fixing anything from the report or want to explore how automations like this could support your team\n            (think: marketing, lead gen, reporting, Pains and time easters), just hit reply. Happy to chat.\n          </p>\n\n          <p>Best regards,<br /><strong>Lennart Øster</strong><br />SEO & Automation Expert</p>\n\n          <p style=\"margin-top: 20px;\">\n            <a href=\"https://lennartoester.com\" style=\"color: #1a73e8; text-decoration: none;\">lennartoester.com</a><br />\n            <a href=\"mailto:hi@lennartoester.com\" style=\"color: #1a73e8; text-decoration: none;\">hi@lennartoester.com</a><br />\n            <a href=\"https://www.linkedin.com/in/lennartoester/\" style=\"color: #1a73e8; text-decoration: none;\">Connect on LinkedIn</a>\n          </p>\n        </td>\n      </tr>\n    </table>\n  </body>\n</html>\n",
+        "options": {
+          "appendAttribution": false,
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        320,
+        112
+      ],
+      "id": "569a50f5-1a90-4f19-b72e-b8f2b13a15eb",
+      "name": "Send a message",
+      "webhookId": "6c2fb931-919c-4729-af32-8d224c0400b3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3PpyCmnQd4Zy3KVn",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{ $now }}",
+        "outputFieldName": "Today",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        -320
+      ],
+      "id": "37df8d71-47f0-485d-a503-b62025735c47",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-dataforseo.dataForSeo",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -320
+      ],
+      "id": "40d8932a-7728-4625-971d-f6d24c789a58",
+      "name": "Get keywords for keywords",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node (JavaScript)\n\n// Set max number of results to return\nconst limit = $('Google Sheets Trigger').first().json.Limit;\n\nconst results = $input.first().json.tasks?.[0]?.result ?? [];\n\nif (!Array.isArray(results)) {\n  throw new Error('Expected tasks[0].result to be an array');\n}\n\nconst data = results\n  .slice(0, limit) // limit the array size\n  .map(({ keyword, search_volume, competition }) => ({\n    keyword,\n    search_volume,\n    competition\n  }));\n\nreturn [\n  {\n    json: { data }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -320
+      ],
+      "id": "f4b7ff80-8a17-47eb-91de-352e61b8a939",
+      "name": "Extract"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "data[0].search_volume"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        368,
+        -320
+      ],
+      "id": "cc215009-4224-4fc8-b42a-59b498be2b3e",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a SEO expert working Audit datasets.\n\nFrom the {{ $json.chatInput.content }} you will create a SEO Keyword research report. Each element in the string consists of the \"Keyword (search volume, Competition)\"\"\n\n\n== Follow these rule  ==\n- Output in HTML syntax\n- Create tables with top 10 choices\n- Create tables with top 11-50 choices\n- Create tables with the rest\n- Create an explanation for each tables regardiong choice. Either based on search volume, competition or both\n- Create easy to understand actionable bullet lists\n- explain as to a 9th grader, so its easy for the reader to take action\n- Make the report look nice by applying Bulma CSS \n- Dont make comments on any of the rules. just apply them\n- My Contact information is Lennart Øster, https://lennartoester.com, and email is hi@lennartoester.com\n- Todays date and time is {{ $('Date & Time').item.json.Today }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        240,
+        -112
+      ],
+      "id": "94497c47-b3f6-4df3-a991-e15e86695321",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -64,
+        -96
+      ],
+      "id": "2c47e06e-8f96-47c5-8757-a7641f0a8366",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EJgMjh9fB0j2lVkm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// n8n Code node (JavaScript)\n\n// Get array from json.data or tasks[0].result\nconst input = $input.first().json;\nconst arr = Array.isArray(input.data) ? input.data : (input.tasks?.[0]?.result ?? []);\n\nif (!Array.isArray(arr)) {\n  throw new Error('Expected an array at json.data or json.tasks[0].result');\n}\n\n// Build comma-separated list in format: keyword (search_volume, competition)\nconst content = arr\n  .map(({ keyword, search_volume, competition }) => {\n    return `${keyword} (${search_volume}, ${competition})`;\n  })\n  .join(', ');\n\n// Return in desired structure\nreturn [\n  {\n    json: {\n      chatInput: {\n        content\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -320
+      ],
+      "id": "c9a58e89-45e5-4f4b-be45-3957979f141b",
+      "name": "Prepare data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all();\n\nreturn allItems.map(item => {\n  const raw = item.json.text || \"\";\n\n  var cleaned = raw.replace(/\\n/g, '\\r');\n  cleaned = cleaned.replace(\"```html\", \"\");\n  cleaned = cleaned.replace(\"```\", \"\");\n\n  return {\n    json: {\n      report: cleaned\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        112
+      ],
+      "id": "a41b965d-589d-43ca-a939-e00a4f8d461e",
+      "name": "Cleanup HTML"
+    },
+    {
+      "parameters": {
+        "content": "https://watery-swoop-2bc.notion.site/SEO-Keyword-Research-24b45ca1eb9e80dd9217db5d6cf5e3ef\n\nhttps://www.linkedin.com/in/lennartoester/recent-activity/all/\n"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        928,
+        -16
+      ],
+      "typeVersion": 1,
+      "id": "2fec6024-a4e9-4cd2-bb13-1c06a0c6d485",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDFco Api": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Prepare data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Cleanup HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare data": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cleanup HTML": {
+      "main": [
+        [
+          {
+            "node": "PDFco Api",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "ba39eee5-ea1b-4667-98be-1d3bc0ef9e19",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-08-15T09:41:38.422Z",
+      "createdAt": "2025-08-15T09:41:38.422Z",
+      "role": "workflow:owner",
+      "workflowId": "AdosxWb8KJS8WyUV",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-03-15T18:55:04.496Z",
+      "createdAt": "2025-03-15T18:55:04.496Z",
+      "id": "hv9Sn3eOxS1IkEIE",
+      "name": "Do Edycji"
+    }
+  ]
+}
