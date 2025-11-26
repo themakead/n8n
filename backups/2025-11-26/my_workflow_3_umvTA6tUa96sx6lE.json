@@ -1,0 +1,104 @@
+{
+  "updatedAt": "2025-07-14T19:54:59.066Z",
+  "createdAt": "2025-07-14T19:36:34.205Z",
+  "id": "umvTA6tUa96sx6lE",
+  "name": "My workflow 3",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "from": "+1XXXXXXXXXX",
+        "to": "={{ $json.query.number }}",
+        "message": "={{ $json.query.sms_message }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilio",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        20
+      ],
+      "id": "17f20027-df56-4455-aa1d-3a58e388bfd7",
+      "name": "Twilio1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "tableId": "n8n_chat_histories",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "session_id",
+              "fieldValue": "={{ $('Webhook2').item.json.query.number }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={\"type\": \"ai\", \"content\": \"{{ $('Webhook2').item.json.query.sms_message }}\", \"additional_kwargs\": {}, \"response_metadata\": {}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        200,
+        20
+      ],
+      "id": "10758008-0e6b-41a2-b13a-d8a0687b9ab1",
+      "name": "Supabase3",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "path": "fab12754-28c1-40c9-9a26-4ad926b67ecb",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        20
+      ],
+      "id": "3d66fde4-b490-4dee-9faa-c8f4ec124086",
+      "name": "Webhook",
+      "webhookId": "fab12754-28c1-40c9-9a26-4ad926b67ecb"
+    }
+  ],
+  "connections": {
+    "Twilio1": {
+      "main": [
+        [
+          {
+            "node": "Supabase3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "b3e01d7b-a792-41d6-acb0-da31bb83c7e2",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-07-14T19:36:34.205Z",
+      "createdAt": "2025-07-14T19:36:34.205Z",
+      "role": "workflow:owner",
+      "workflowId": "umvTA6tUa96sx6lE",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
