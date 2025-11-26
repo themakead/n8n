@@ -1,0 +1,512 @@
+{
+  "updatedAt": "2025-07-01T12:35:43.860Z",
+  "createdAt": "2025-03-31T11:20:31.277Z",
+  "id": "HOzNp7v4cJMvcpAg",
+  "name": "Agent do umawiania spotkań",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $('Gmail Trigger').first().json.id }}"
+      },
+      "id": "a1981300-5b99-4f26-bdb4-127ca19c820e",
+      "name": "Mark as read",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        1200,
+        880
+      ],
+      "webhookId": "7e2d851b-c9f3-471c-875d-0da7c2c3b561",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "includeSpamTrash": false,
+          "labelIds": [
+            "Label_1239467446073112261"
+          ]
+        },
+        "options": {}
+      },
+      "id": "74d3bffe-b490-4089-8840-3b32bf0792d0",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "position": [
+        -100,
+        280
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $('Gmail Trigger').first().json.id }}",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "id": "948d8b2c-b9b5-487f-9942-045bcca777c1",
+      "name": "Send reply",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        1200,
+        560
+      ],
+      "webhookId": "0f18d414-1b14-4d2e-9fc2-d2d302372dc6",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "bh@waterglass.io",
+          "mode": "list",
+          "cachedResultName": "Waterglass.io"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        760,
+        720
+      ],
+      "id": "73a509d0-6e0e-49a5-beb4-f90c3345dbf4",
+      "name": "Check availability"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7af9ef38-7fd1-42c7-a73f-e7c1202252ea",
+              "name": "agent_name",
+              "value": "Alex Isaac",
+              "type": "string"
+            },
+            {
+              "id": "91c85070-5528-41a6-ab45-aef414f4f4a1",
+              "name": "agent_email",
+              "value": "ai@waterglass.io",
+              "type": "string"
+            },
+            {
+              "id": "ac2084c0-f1ad-40b8-8f0b-2405c5c547f9",
+              "name": "preferred_times",
+              "value": "Monday – Friday from 9am - 6pm",
+              "type": "string"
+            },
+            {
+              "id": "91102412-6ba3-4b7e-9e16-72fc97f09a4c",
+              "name": "meeting_buffer",
+              "value": "15 minutes",
+              "type": "string"
+            },
+            {
+              "id": "e00caeee-592d-4912-b3c4-a1fa4ad531ae",
+              "name": "time_format",
+              "value": "24 hour",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        120,
+        280
+      ],
+      "id": "58ae91ab-60cd-4fa7-9e53-b66f7c99980d",
+      "name": "Settings"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Retrieve the Gmail Trigger output\nconst gmailTo = $('Gmail Trigger').first().json.to.value || [];\nconst gmailFrom = $('Gmail Trigger').first().json.from.value || [];\n\n// Retrieve the agent email from the Settings node and normalize it\nconst agentEmail = ($('Settings').first().json.agent_email || '').trim().toLowerCase();\n\n// Combine \"to\" and \"from\" into one array\nconst allEmails = [...gmailTo, ...gmailFrom];\n\n// Extract, normalize, and filter email addresses\nconst recipientEmails = allEmails\n  .map(entry => (entry.address || '').toLowerCase())\n  .filter(email => email && email !== agentEmail);\n\n// Optional: Remove duplicates\nconst uniqueEmails = [...new Set(recipientEmails)];\n\n// Return as an array of objects\nreturn uniqueEmails.map(email => ({ json: { email } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -40,
+        520
+      ],
+      "id": "4cdfaba4-e583-4319-9ca6-e01e04af7a03",
+      "name": "Extract recipients from email thread"
+    },
+    {
+      "parameters": {
+        "inputText": "=You are a classification expert. Please evaluate the following email to determine if it suggests scheduling a meeting or appointment:\nSubject: \"{{ $('Gmail Trigger').first().json.subject }}\"\n<Email>\n{{ $('Gmail Trigger').first().json.text }}\n</Email>",
+        "categories": {
+          "categories": [
+            {
+              "category": "is_appointment",
+              "description": "Email Is requesting an appointment"
+            },
+            {
+              "category": "confirmed_appointment",
+              "description": "Email is confirming an appointment"
+            }
+          ]
+        },
+        "options": {
+          "fallback": "discard"
+        }
+      },
+      "id": "3f448bed-3fcd-4215-be90-4fadd7ca2553",
+      "name": "Is this about and appointment?",
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "position": [
+        0,
+        760
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "bh@waterglass.io",
+          "mode": "list",
+          "cachedResultName": "Waterglass.io"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "attendees": [
+            "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Attendees', ``, 'string') }}"
+          ],
+          "location": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Location', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        780,
+        1080
+      ],
+      "id": "77382863-7a09-420a-af13-2eac05d5f1a1",
+      "name": "Book meeting"
+    },
+    {
+      "parameters": {
+        "content": "# AI Meeting Agent\n## This agent can be added to an email thread and be tasked with scheduling a meeting.\n## You can ask the agent in natural language to suggest meeting times and then invite all members of an email thread.\n",
+        "width": 1460,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        20,
+        -40
+      ],
+      "id": "1da86c69-ba68-4149-a98d-614c172fa00d",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "![](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Google_Calendar_icon_%282020%29.svg/1024px-Google_Calendar_icon_%282020%29.svg.png)\n\n",
+        "width": 150,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        -40
+      ],
+      "id": "71eff466-607d-4125-a1e5-6924edeb4a34",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## The AI agent suggests meeting times & \n## books a meeting once confirmed",
+        "height": 1080,
+        "width": 540,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        380,
+        160
+      ],
+      "id": "e3d76087-62bf-431c-9e3a-b0f304cf725f",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Add the AI agent to an email",
+        "height": 1080,
+        "width": 540,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        160
+      ],
+      "id": "f86b743c-4ab7-4e6c-9e4e-bac2b9ae8a57",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        420,
+        1080
+      ],
+      "id": "8454f2e3-889d-4e98-afed-9f27ec14b7de",
+      "name": "OpenAI"
+    },
+    {
+      "parameters": {
+        "content": "## Send email invite",
+        "height": 1080,
+        "width": 540,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        940,
+        160
+      ],
+      "id": "de84e152-397a-439a-8a32-2ba682a5fb35",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Recipients: {{ $items(\"Extract recipients from email thread\").map(item => item.json.email).join(\", \") }}\nSubject: \"{{ $('Gmail Trigger').first().json.subject }}\"\n<Body>\n{{ $('Gmail Trigger').first().json.text }}\n</Body>",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a helpful meeting scheduling assistant. Based on the received email, check the calendar for available time slots and propose an appropriate response including 3 possible meeting slots.\n\nCarefully follow the steps below to create your response:\n1. Read the incoming email and understand your specific task.\n2. From the context of the email, extract the proposed date range to look for availability, the length of the appointment, the suggested title and guests that should get invited of the appointment.\n3. Even if not all of these information above is available, you must still suggest 3 possible meeting slots between {{ $('Settings').item.json.preferred_times }}, but also ask for the missing information in yout response.\n\nTake the following points into consideration:\n- Aim to get a specific time, rather than just a day.\n– When checking my availability, make sure that there's at least {{ $('Settings').item.json.meeting_buffer }} time in between meetings.\n– Avoid any conflicts with existing meetings, propose only free times.\n– If I'm not available, you must propose a new time based on my availability.\n– Identify yourself as \"{{ $('Settings').item.json.agent_name }}\" and sign the email you draft accordingly.\n– Only return the body of the email, no subject or anything else.\n– Do not use markdown in your email response.\n– Propose the times in {{ $('Settings').item.json.time_format }} time format.\n\nToday's date and time is: {{ $now.toISO() }}."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        540,
+        480
+      ],
+      "id": "3bdb5fe4-b660-43c2-bb87-6f346f3596d5",
+      "name": "Suggest Meeting Times"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Recipients: {{ $items(\"Extract recipients from email thread\").map(item => item.json.email).join(\", \") }}\nSubject: \"{{ $('Gmail Trigger').first().json.subject }}\"\n<Body>\n{{ $('Gmail Trigger').first().json.text }}\n</Body>",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a helpful meeting scheduling assistant. Based on the received email, your task is to schedule a meeting with the recipients on the email thread based on their preferences.\n\nCarefully follow the steps below to create your response:\n1. Read the incoming email and understand your specific task.\n2. From the context of the email, extract the proposed date range to look for availability, the length of the appointment, the suggested title and guests that should get invited of the appointment.\n3. Book a meeting in Google Calendar using the Google Calendar tool, based on the information you gathered and invite the recipients on the email thread.\n\nTake the following points into consideration:\n– If you can't find a title for the meeting, simply name it \"30 Min. Meeting\"\n\nToday's date and time is: {{ $now.toISO() }}."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        540,
+        880
+      ],
+      "id": "2c95f398-6da7-48b4-af8d-cc4cafb4ca37",
+      "name": "Book Confirmed Meeting"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "email"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        120,
+        520
+      ],
+      "id": "1e769357-2e27-4ce5-8db5-ad94b5d31159",
+      "name": "Aggregate"
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check availability": {
+      "ai_tool": [
+        [
+          {
+            "node": "Suggest Meeting Times",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Extract recipients from email thread",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract recipients from email thread": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is this about and appointment?": {
+      "main": [
+        [
+          {
+            "node": "Suggest Meeting Times",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Book Confirmed Meeting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Book meeting": {
+      "ai_tool": [
+        [
+          {
+            "node": "Book Confirmed Meeting",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Suggest Meeting Times",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Is this about and appointment?",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Book Confirmed Meeting",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Suggest Meeting Times": {
+      "main": [
+        [
+          {
+            "node": "Send reply",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Mark as read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Book Confirmed Meeting": {
+      "main": [
+        [
+          {
+            "node": "Mark as read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Is this about and appointment?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "9689cc20-f395-4028-821b-4261ea2d7f8e",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-03-31T11:20:31.277Z",
+      "createdAt": "2025-03-31T11:20:31.277Z",
+      "role": "workflow:owner",
+      "workflowId": "HOzNp7v4cJMvcpAg",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-03-15T18:54:26.296Z",
+      "createdAt": "2025-03-15T18:54:26.296Z",
+      "id": "LcKGzshuAfGAnTK9",
+      "name": "Do sprawdzenia"
+    }
+  ]
+}
