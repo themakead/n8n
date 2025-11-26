@@ -1,0 +1,101 @@
+{
+  "updatedAt": "2025-08-10T13:29:44.421Z",
+  "createdAt": "2025-08-05T05:13:07.062Z",
+  "id": "24yInHxpKX0gufGS",
+  "name": "webhook",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fe69c1f3-ab5c-447e-9cef-4447e8e078a8",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -912,
+        -80
+      ],
+      "id": "945f5ce7-8ecc-4161-bd99-b9de843ccf28",
+      "name": "Webhook",
+      "webhookId": "fe69c1f3-ab5c-447e-9cef-4447e8e078a8"
+    },
+    {
+      "parameters": {
+        "operation": "rotate",
+        "dataPropertyName": "image",
+        "rotate": 90,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.editImage",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        -272
+      ],
+      "id": "66261396-d72c-4f34-83a6-61a79b8310ec",
+      "name": "Edit Image",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -480,
+        -80
+      ],
+      "id": "2a589cba-e195-428c-9020-0f3d49af1e12",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Image": {
+      "main": [
+        []
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "6fdea5f4-0a76-4c56-bbb7-392e96206bf7",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-08-05T05:13:07.062Z",
+      "createdAt": "2025-08-05T05:13:07.062Z",
+      "role": "workflow:owner",
+      "workflowId": "24yInHxpKX0gufGS",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
