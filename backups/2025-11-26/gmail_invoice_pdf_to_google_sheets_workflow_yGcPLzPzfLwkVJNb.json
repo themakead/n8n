@@ -1,0 +1,2925 @@
+{
+  "updatedAt": "2025-08-12T16:43:11.895Z",
+  "createdAt": "2025-06-23T09:43:08.859Z",
+  "id": "yGcPLzPzfLwkVJNb",
+  "name": "Gmail Invoice PDF to Google Sheets Workflow",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -976,
+        1008
+      ],
+      "id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false,
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -640,
+        1008
+      ],
+      "id": "5b68e8a1-4776-4081-b60a-a69a07f213de",
+      "name": "Gmail1",
+      "webhookId": "e7a027a9-8261-45d2-ae49-b866e88a1256",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3PpyCmnQd4Zy3KVn",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Ten kod filtruje załączniki, przepuszczając tylko te,\n// których nazwa pliku (bez rozszerzenia) składa się wyłącznie z cyfr.\n\n// Tablica do przechowywania tylko załączników z fakturami\nconst invoiceAttachments = [];\n\n// Pętla przez wszystkie elementy, które dotarły do węzła (zazwyczaj jeden e-mail na raz)\nfor (const item of items) {\n  // Sprawdzamy, czy istnieją jakiekolwiek załączniki (dane binarne)\n  if (item.binary) {\n    // Pętla przez wszystkie załączniki w jednym e-mailu (attachment_0, attachment_1, itd.)\n    for (const key in item.binary) {\n      const attachment = item.binary[key];\n      const fileName = attachment.fileName;\n\n      // Usuwamy rozszerzenie pliku, aby uzyskać czystą nazwę\n      // np. \"91993.pdf\" -> \"91993\"\n      const nameWithoutExtension = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;\n\n      // Używamy wyrażenia regularnego, aby sprawdzić, czy nazwa składa się tylko z cyfr\n      // /^\\d+$/ oznacza: od początku (^) do końca ($) muszą być tylko cyfry (\\d+)\n      if (/^\\d+$/.test(nameWithoutExtension)) {\n        // Jeśli tak, to jest to faktura, której szukamy.\n        // Tworzymy nowy, czysty element, który zawiera tylko ten jeden załącznik.\n        invoiceAttachments.push({\n          json: {\n             // Możemy tu przekazać dodatkowe informacje z e-maila, jeśli potrzebne\n             originalMessageId: item.json.id,\n             fileName: fileName,\n          },\n          binary: {\n            // Przekazujemy dane binarne tylko tego jednego, prawidłowego załącznika\n            data: attachment\n          }\n        });\n      }\n    }\n  }\n}\n\n// Zwracamy tablicę z odfiltrowanymi załącznikami.\n// Każda faktura będzie teraz osobnym elementem w n8n.\nreturn invoiceAttachments;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        1008
+      ],
+      "id": "ed8c676e-b4f5-45de-ab02-9c27417e215e",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        1008
+      ],
+      "id": "5e403bae-138f-490b-8e87-cb84e5a3e9d7",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Tablica do przechowywania wyników dla każdej przetworzonej faktury\nconst allResults = [];\n\n// Pętla 'for...of' przechodzi przez każdy element (fakturę), który dotarł do węzła.\n// 'items' to specjalna zmienna n8n, która zawiera wszystkie dane wejściowe.\nfor (const item of items) {\n  \n  // Pobieramy tekst z aktualnie przetwarzanego elementu w pętli\n  const rawText = item.json.text;\n\n  // Zamień podwójne entery na pojedyncze i rozbij na linie\n  const lines = rawText.replace(/\\n{2,}/g, '\\n').split('\\n');\n\n  // Tworzymy nowy, pusty obiekt na dane dla KAŻDEJ faktury\n  const data = {\n    sprzedawca: '',\n    dataSprzedazy: '',\n    numerFaktury: '',\n    terminPlatnosci: '',\n    kwotaBrutto: '',\n    platneNaKonto: '',\n    rozliczenie: ''\n  };\n\n  // Reszta Twojego kodu do parsowania pozostaje bez zmian,\n  // ponieważ będzie się teraz wykonywać dla każdej faktury osobno w pętli.\n  for (let i = 0; i < lines.length; i++) {\n    const line = lines[i].trim();\n\n    // Sprzedawca\n    if (line.startsWith('Sprzedawca:')) {\n      data.sprzedawca = lines[i + 1]?.trim() || '';\n    }\n\n    // Data sprzedaży\n    if (line.startsWith('Data sprzedaży:')) {\n      const match = line.match(/Data sprzedaży: (\\d{2}\\.\\d{2}\\.\\d{4})/);\n      if (match) data.dataSprzedazy = match[1];\n    }\n\n    // Numer faktury\n    if (line.includes('Faktura Nr')) {\n      const match = line.match(/Faktura Nr ([^ ]+)/);\n      if (match) data.numerFaktury = match[1];\n    }\n\n    // Termin płatności\n    if (line.includes('Termin płatności:')) {\n      const match = line.match(/Termin płatności: (\\d{2}\\.\\d{2}\\.\\d{4})/);\n      if (match) data.terminPlatnosci = match[1];\n    }\n\n    // Kwota brutto (Do zapłaty)\n    if (line.startsWith('Do zapłaty:')) {\n      const match = line.match(/Do zapłaty: ([\\d\\s,]+)/);\n      if (match) data.kwotaBrutto = match[1].replace(/\\s/g, '');\n    }\n\n    // Płatne na konto\n    if (line.startsWith('Płatne na konto:')) {\n      data.platneNaKonto = line.replace('Płatne na konto:', '').trim();\n    }\n\n    // Rozliczenie – rozpoznanie dwóch możliwych typów\n    if (\n      line.startsWith('Rozliczenie') ||\n      line.startsWith('Najem') ||\n      line.startsWith('Opłaty administracyjne')\n    ) {\n      data.rozliczenie = line.trim();\n    }\n  }\n\n  // Po przetworzeniu jednej faktury, dodajemy jej dane do naszej tablicy wyników\n  allResults.push({ json: data });\n}\n\n// Na koniec zwracamy tablicę ze wszystkimi przetworzonymi fakturami.\n// n8n automatycznie przekaże je dalej jako 10 oddzielnych elementów.\nreturn allResults.reverse();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        1008
+      ],
+      "id": "bb4c676c-d8f2-4db0-91c9-b3ee30b810dc",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1iNQjhr09-92V5potY_GOxzDywDJkU_Q2ez2vu2y6axE",
+          "mode": "list",
+          "cachedResultName": "faktury Agrobex",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iNQjhr09-92V5potY_GOxzDywDJkU_Q2ez2vu2y6axE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1962392120,
+          "mode": "list",
+          "cachedResultName": "faktury Agrobex",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iNQjhr09-92V5potY_GOxzDywDJkU_Q2ez2vu2y6axE/edit#gid=1962392120"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "sprzedawca": "={{ $('Code1').item.json.sprzedawca }}",
+            "dataSprzedazy": "={{ $('Code1').item.json.dataSprzedazy }}",
+            "numerFaktury": "={{ $('Code1').item.json.numerFaktury }}",
+            "terminPlatnosci": "={{ $('Code1').item.json.terminPlatnosci }}",
+            "platneNaKonto": "={{ $('Code1').item.json.platneNaKonto }}",
+            "rozliczenie": "={{ $('Code1').item.json.rozliczenie }}",
+            "kwotaBrutto": "={{ $('Code1').item.json.kwotaBrutto }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sprzedawca",
+              "displayName": "sprzedawca",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "dataSprzedazy",
+              "displayName": "dataSprzedazy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "numerFaktury",
+              "displayName": "numerFaktury",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "terminPlatnosci",
+              "displayName": "terminPlatnosci",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "kwotaBrutto",
+              "displayName": "kwotaBrutto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "platneNaKonto",
+              "displayName": "platneNaKonto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "rozliczenie",
+              "displayName": "rozliczenie",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        688,
+        1008
+      ],
+      "id": "0f1530d4-13e8-44c8-a89b-bad043345939",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 5,
+        "filters": {
+          "q": "subject:Faktura",
+          "sender": "efaktury@agrobex.pl"
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -800,
+        1008
+      ],
+      "id": "3c4d5e6f-7a8b-9c0d-1e2f3a4b5c6d7e8f",
+      "name": "Get many messages",
+      "webhookId": "150a3ccf-85fc-410d-b81f-bdf7f59d39ad",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3PpyCmnQd4Zy3KVn",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1iNQjhr09-92V5potY_GOxzDywDJkU_Q2ez2vu2y6axE",
+          "mode": "list",
+          "cachedResultName": "faktury Agrobex",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iNQjhr09-92V5potY_GOxzDywDJkU_Q2ez2vu2y6axE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1962392120,
+          "mode": "list",
+          "cachedResultName": "faktury Agrobex",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1iNQjhr09-92V5potY_GOxzDywDJkU_Q2ez2vu2y6axE/edit#gid=1962392120"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "numerFaktury",
+              "lookupValue": "={{ $json.numerFaktury }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        160,
+        1008
+      ],
+      "id": "aa31d8ce-ce8f-4b29-b7f5-184efa719cf0",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "95f9cd1f-38f9-46df-91f2-80605ff0d0ce",
+              "leftValue": "={{ $json.numerFaktury }}",
+              "rightValue": "={{ 0 }}",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        368,
+        1008
+      ],
+      "id": "4c379cb5-d134-4181-af5c-192bdcfd679e",
+      "name": "If",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "content": "## Setup\n1. Setup your **Gmail** and **Google Drive** credentials\n2. Setup your **Google Sheets** credentials\n3. Setup your **Openai** api key",
+        "height": 440
+      },
+      "id": "5fb9bec6-3c18-492f-be36-990d3d2027ff",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1680,
+        80
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "readStatus": "unread"
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "id": "23e9e927-b0c8-4a41-a4da-1163d0c41afc",
+      "name": "Gmail Trigger1",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "position": [
+        -1744,
+        624
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4cca07a2-6a70-4011-a025-65246e652fb9",
+              "name": "url_to_drive_folder",
+              "type": "string",
+              "value": "1fCWCdqrFP3WrjjLc-gJtxMaiaF5lh8Ko"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "719d71f6-d54d-4213-b297-2b14c970053b",
+      "name": "Setup1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -1408,
+        624
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/upload/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "uploadType",
+              "value": "media"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "={{ $binary.attachment_0.mimeType === \"application/pdf\"\n     ? \"attachment_0\"\n     : \"attachment_1\" }}",
+        "options": {}
+      },
+      "id": "1cc4c393-7c3d-4378-8019-b72fb89b90ed",
+      "name": "Upload PDF to Drive1",
+      "type": "n8n-nodes-base.httpRequest",
+      "maxTries": 5,
+      "position": [
+        -880,
+        512
+      ],
+      "retryOnFail": true,
+      "typeVersion": 4.2,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "gsn3as2Q8tIloMzv",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.id }}"
+        },
+        "newUpdatedFileName": "={{ $('Setup1').item.json.subject }}_invoice_{{ $now.format('yyyy-MM-dd') }}.pdf",
+        "options": {}
+      },
+      "id": "4940eafe-912a-4c45-961a-2ec73417a548",
+      "name": "Rename file1",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        -704,
+        512
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.id }}"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive",
+          "cachedResultName": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1fCWCdqrFP3WrjjLc-gJtxMaiaF5lh8Ko",
+          "cachedResultUrl": "",
+          "cachedResultName": "2025"
+        }
+      },
+      "id": "2cb9e66d-0def-41c5-a0c9-e27815fe00f3",
+      "name": "Move to the correct folder1",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        -528,
+        512
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $('Gmail Trigger1').item.json.id }}"
+      },
+      "id": "f297cc35-eadb-4788-a52a-973b99a0ebc9",
+      "name": "Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        64,
+        720
+      ],
+      "webhookId": "556cbee3-8de0-4645-9e91-e7c0c252f2ab",
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "2c193d54-24ec-4795-95ea-dcd40ca817ae",
+      "name": "Extract from File2",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        112,
+        320
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.id }}"
+        },
+        "options": {}
+      },
+      "id": "09abafaa-7dc5-4eab-922f-79bb9b22c68a",
+      "name": "Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        -304,
+        512
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "6132f43c-d6f2-4589-a86f-7d6e684d5a65",
+      "name": "OpenAI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmOpenAi",
+      "position": [
+        640,
+        528
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n  \"Invoice date\": { \"type\": \"date\" },\n  \"Invoice description\": { \"type\": \"string\" },\n  \"Total price\": { \"type\": \"number\" },\n  \"Fichero\": { \"type\": \"string\" }\n}"
+      },
+      "id": "ee356337-1f91-40df-91dc-e72d8c1ba364",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        848,
+        544
+      ],
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1gIUnjSWUhsoTOVVd4ZoVjARCGQfGE8s7FWcju3lNajM",
+          "cachedResultUrl": "",
+          "cachedResultName": "facturas"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gid=0"
+        },
+        "columns": {
+          "value": {},
+          "schema": [
+            {
+              "id": "Invoice date",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Invoice date",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Invoice Description",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Invoice Description",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total price",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Total price",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fichero",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Fichero",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "b05dbc29-f0ff-4c8a-a287-8164f93075f6",
+      "name": "Append to Reconciliation Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1184,
+        368
+      ],
+      "typeVersion": 4.3,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 3. Use LLMs to Extract Values from Data\n[Read more about Basic LLM Chain](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.chainllm/)\n\nLarge language models are perfect for data extraction tasks as they can work across a range of document layouts without human intervention. The extracted data can then be sent to a variety of datastores such as spreadsheets, accounting systems and/or CRMs.\n\n**Tip:** The \"Structured Output Parser\" ensures the AI output can be\ninserted to our spreadsheet without additional clean up and/or formatting. ",
+        "height": 656.5014186128178,
+        "width": 805.0578351924228,
+        "color": 7
+      },
+      "id": "25009649-7240-4051-b309-c89d45c64627",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        592,
+        112
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json.output }}",
+        "options": {}
+      },
+      "id": "9f2b7663-1acf-4972-b412-152af75e4687",
+      "name": "Map Output",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        992,
+        368
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Given the following invoice in the <invoice> xml tags, extract the following information as listed below.\nIf you cannot the information for a specific item, then leave blank and skip to the next. \n\n* Invoice date\n* Invoice Description: {{ $('Rename file1').item.json.name }}\n* Total price\n* Fichero: =HYPERLINK(\"https://drive.google.com/file/d/{{ $('Move to the correct folder1').item.json.id }}/view\", \"Ver Documento\")\n\n\n<invoice>{{ $json.text }}</invoice>",
+        "hasOutputParser": true
+      },
+      "id": "90432537-d0cb-4b5e-a8dc-4aaa6483cc0b",
+      "name": "Apply Data Extraction Rules",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        640,
+        368
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "content": "\n\n\n\n\n\n\n\n\n\n\n\n**Need more attributes?**\nChange it here!",
+        "height": 213.73043662572252,
+        "width": 192.26896179623753
+      },
+      "id": "9b56d58d-47ab-440e-a987-6ad89012dd0a",
+      "name": "Sticky Note6",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        768,
+        512
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 1,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "229200d1-ec13-4970-ae0e-2c8e17da0bdf",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              },
+              "leftValue": "={{ $('Gmail Trigger1').item.json.headers['content-type'] }}",
+              "rightValue": "multipart/mixed"
+            },
+            {
+              "id": "new-condition",
+              "operator": {
+                "type": "boolean",
+                "operation": "isNotEmpty"
+              },
+              "leftValue": "={{ $json.attachments }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cf7a40f9-f27c-4080-bc19-e5f768ed59c5",
+      "name": "Only invoice mails with attachments",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -1104,
+        624
+      ],
+      "typeVersion": 2.1
+    },
+    {
+      "parameters": {},
+      "id": "87757b96-1bf1-42b9-b60c-da81507a9b33",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        -1856,
+        1712
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {}
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "mode": "list",
+          "value": "15Xpvr0Q4cBwYv1e_jNI8JO4LKAQmgYC2",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/15Xpvr0Q4cBwYv1e_jNI8JO4LKAQmgYC2",
+          "cachedResultName": "Invoices_Inbox"
+        },
+        "event": "fileCreated",
+        "options": {
+          "fileType": "all"
+        }
+      },
+      "id": "bcb98ba2-a49a-43ae-8fec-7856c7a02527",
+      "name": "On new file in Google Drive",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "position": [
+        -1856,
+        2048
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "15Xpvr0Q4cBwYv1e_jNI8JO4LKAQmgYC2",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/15Xpvr0Q4cBwYv1e_jNI8JO4LKAQmgYC2",
+            "cachedResultName": "Invoices_Inbox"
+          }
+        },
+        "options": {}
+      },
+      "id": "7913d89e-c110-435d-84ef-b234d7856c7e",
+      "name": "Load files from Google Drive folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        -1296,
+        2048
+      ],
+      "executeOnce": true,
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "id",
+        "joinMode": "keepNonMatches",
+        "outputDataFrom": "input2",
+        "options": {}
+      },
+      "id": "ebd4279b-22c7-4428-972c-a02c1b651a65",
+      "name": "Filter processed files",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        -816,
+        1920
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.id }}"
+        },
+        "options": {}
+      },
+      "id": "da720586-3ba3-4a93-9ab8-593d7046834b",
+      "name": "Download file for OCR",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        -624,
+        1920
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1WNXkB6SpJyGtPVcHmj1oaaDFikyACCuq6RY5rEPH4OQ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WNXkB6SpJyGtPVcHmj1oaaDFikyACCuq6RY5rEPH4OQ/edit?usp=drivesdk",
+          "cachedResultName": "n8n_ocr_invoices"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WNXkB6SpJyGtPVcHmj1oaaDFikyACCuq6RY5rEPH4OQ/edit#gid=0",
+          "cachedResultName": "Sheet1"
+        },
+        "options": {}
+      },
+      "id": "481d0ada-6878-4b21-bf42-314f74eea307",
+      "name": "Get already processed rows from Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -1024,
+        1712
+      ],
+      "executeOnce": true,
+      "typeVersion": 4.3,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1WNXkB6SpJyGtPVcHmj1oaaDFikyACCuq6RY5rEPH4OQ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WNXkB6SpJyGtPVcHmj1oaaDFikyACCuq6RY5rEPH4OQ/edit?usp=drivesdk",
+          "cachedResultName": "n8n_ocr_invoices"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WNXkB6SpJyGtPVcHmj1oaaDFikyACCuq6RY5rEPH4OQ/edit#gid=0",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "value": {},
+          "schema": [
+            {
+              "id": "Id",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Id",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Invoice No",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Invoice No",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Invoice date",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Invoice date",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Invoice Period",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Invoice Period",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Gross Amount incl. VAT ",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Gross Amount incl. VAT ",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IBAN",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "IBAN",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "autoMapInputData",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "022bfd9b-3c13-4d8c-8002-eb6ce46ea960",
+      "name": "Save data to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        1472,
+        1840
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "purpose",
+              "value": "ocr"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "323f7e7c-6960-4891-9107-df4996134d7b",
+      "name": "Mistral Upload",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -128,
+        1904
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mistral.ai/v1/files/{{ $json.id }}/url",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "expiry",
+              "value": "24"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0188136f-e898-411b-9b9a-6cd83df4480c",
+      "name": "Mistral Signed URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        80,
+        1904
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/ocr",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-ocr-latest\",\n  \"document\": {\n    \"type\": \"document_url\",\n    \"document_url\": \"{{ $json.url }}\"\n  },\n  \"include_image_base64\": true\n}",
+        "options": {}
+      },
+      "id": "1e42c223-f9e2-4384-baf9-758d9189730f",
+      "name": "Mistral DOC OCR",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        288,
+        1888
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Grab the keys from the first row\nconst schema = Object.keys($input.all()[0].json);\n\n// Return a single item whose JSON is just that schema array\nreturn [\n  { json: { schema } }\n];"
+      },
+      "id": "e6ac25e6-f18f-4b60-815b-27ab02eed50d",
+      "name": "extract schema",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -1264,
+        1712
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Node name: Join Pages\n// 1. Grab all incoming documents\nconst docs = $input.all();\n\n// 2. Pull in your schema once and filter it\nlet schema = $('extract schema').first().json.schema;\nconst toRemove = ['Id', 'row_number'];\nschema = schema.filter(f => !toRemove.includes(f));\n\n// 3. Build one output per document\nconst results = docs.map(doc => {\n  // join only that doc’s pages\n  const fullText = doc.json.pages\n    .map(p => p.markdown)\n    .join('\\n\\n');\n\n  return {\n    json: {\n      ocr_text: fullText,\n      schema,\n    },\n  };\n});\n\nreturn results;"
+      },
+      "id": "ebd901b9-4a01-49c1-91d8-b6f63cae1251",
+      "name": "Join OCR Pages and remove id field",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        672,
+        1888
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Get the array of processed files (with id & name)\nconst processed = $('Filter processed files').all();\n\n// 2. Take each LLM output in turn, parse it, inject the matching ID, and return\nreturn $input.all().map((item, index) => {\n  // parse the JSON string your chat node returned\n  const data = JSON.parse(item.json.output);\n\n  // look up the corresponding Drive file ID by array index\n  data.Id   = processed[index]?.json.id ?? null;\n\n\n  // emit for your Sheets node\n  return { json: data };\n});"
+      },
+      "id": "616be086-70b4-4401-9ddd-3dd6220f4599",
+      "name": "Add google drive Id back",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1200,
+        1840
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-preview-05-20",
+        "options": {}
+      },
+      "id": "c45e850b-c085-4bcd-96a4-5cc810540801",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "position": [
+        880,
+        2064
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "purpose",
+              "value": "ocr"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "382edd4e-9948-4ca4-bcb3-18876ad94d72",
+      "name": "Mistral Upload1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -96,
+        2128
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mistral.ai/v1/files/{{ $json.id }}/url",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "expiry",
+              "value": "24"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aa2ab505-ab62-452f-b46c-5b489ebf0bb9",
+      "name": "Mistral Signed URL1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        80,
+        2128
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/ocr",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-ocr-latest\",\n  \"document\": {\n    \"type\": \"image_url\",\n    \"image_url\": \"{{ $json.url }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "5f7902cc-d0ae-409f-af9c-661fa4a6d805",
+      "name": "Mistral IMAGE OCR",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        288,
+        2112
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "content": "### File Ids\nYou can view the files using Id from the first column. replace the <Id> below\nhttps://drive.google.com/file/d/<Id>/view",
+        "height": 220,
+        "width": 360
+      },
+      "id": "409e1b8b-990f-45ea-bee4-e067f0c3bbeb",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1344,
+        2048
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Extract the following fields from the invoice text:\n\n{{ JSON.stringify($json.schema) }}\n\nImportant: Double-check that all line items are extracted without omission.\n\n- You must respond ONLY with valid raw rendered JSON.\n- Do NOT include the word \"json\".\n- Do NOT include the word \"```json\".\n- Do NOT use triple backticks or markdown formatting.\n- Do NOT wrap the response in any key like \"output\".\n- Do NOT write anything starting at output directly start with valid root-level JSON.\n- Only respond with a valid, root-level JSON object.\n\nText to extract data from: {{ $json.ocr_text }}",
+        "options": {
+          "systemMessage": "=You are a document parsing assistant designed to extract structured data from invoice PDFs for automated uploading and validation in a financial system."
+        }
+      },
+      "id": "94be9472-c88e-42a5-8368-687fa417789c",
+      "name": "Field Extractor",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        848,
+        1840
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "content": "### Select Sheet\n  \nAdd column headers in the sheet to which you save data on row one to specify which fields you are interested in extracting. ",
+        "height": 140,
+        "width": 300,
+        "color": 4
+      },
+      "id": "a7281846-6c48-44a8-a920-3cfd20ad410f",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1600,
+        1408
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### Select sheet",
+        "height": 80,
+        "width": 200,
+        "color": 4
+      },
+      "id": "38333cab-71f8-4d9c-a5b1-f3c6b95e079f",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1056,
+        1600
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### Select sheet to save data (same as at the start)",
+        "height": 80,
+        "width": 200,
+        "color": 4
+      },
+      "id": "c2d7d7c3-5dfd-48a3-973d-5d856facee8e",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1424,
+        1744
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1WNXkB6SpJyGtPVcHmj1oaaDFikyACCuq6RY5rEPH4OQ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WNXkB6SpJyGtPVcHmj1oaaDFikyACCuq6RY5rEPH4OQ/edit?usp=drivesdk",
+          "cachedResultName": "n8n_ocr_invoices"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1WNXkB6SpJyGtPVcHmj1oaaDFikyACCuq6RY5rEPH4OQ/edit#gid=0",
+          "cachedResultName": "Sheet1"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRange",
+              "firstDataRow": 1
+            }
+          },
+          "returnFirstMatch": false
+        }
+      },
+      "id": "5323fe73-0ffd-4b26-ad00-e3c4918de902",
+      "name": "Get Fields Schema",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        -1504,
+        1712
+      ],
+      "typeVersion": 4.6,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Uses drive ID - no need to modify",
+        "height": 80,
+        "width": 160,
+        "color": 2
+      },
+      "id": "975418d8-dc8b-48ef-9992-26b864d24d5c",
+      "name": "Sticky Note7",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -640,
+        1824
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "Requires Mistral API Key for La Platforme\nhttps://mistral.ai/products/la-plateforme",
+        "height": 80,
+        "width": 520,
+        "color": 2
+      },
+      "id": "c2e2af07-b727-4371-b645-2261f267759a",
+      "name": "Sticky Note8",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -144,
+        1760
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "54e4c552-cdf0-4707-8723-65bcf41d8a96",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              },
+              "leftValue": "={{$binary.data.mimeType}}",
+              "rightValue": "image/"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3fcebeaa-b355-4467-8fe2-c2a53c44b748",
+      "name": "If1",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -400,
+        1920
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "content": "### Modify Folder source",
+        "height": 80,
+        "width": 220,
+        "color": 4
+      },
+      "id": "c88b87c4-0824-45e4-8945-60a67517a161",
+      "name": "Sticky Note9",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1360,
+        2240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "### Set interval for checking drive folder and pull new files",
+        "height": 80,
+        "width": 220,
+        "color": 4
+      },
+      "id": "513119e7-bb9c-4293-afca-f34db8a85fc4",
+      "name": "Sticky Note10",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1920,
+        2272
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": ">> ### First column header in cell A1 MUST BE \"Id\". Id tracks the google drive Id and ensures the workflow is not processing previously processed files",
+        "height": 120,
+        "width": 300,
+        "color": 3
+      },
+      "id": "9a452fcb-4dc8-42b6-92b2-95f25996f366",
+      "name": "Sticky Note11",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1600,
+        1568
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "model": "deepseek/deepseek-chat-v3-0324",
+        "options": {}
+      },
+      "id": "c1f726a7-bdbc-4a90-88bb-243d3f1a9556",
+      "name": "OpenRouter Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "position": [
+        2608,
+        1984
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openRouterApi": {
+          "id": "AwomYagYOouCTEy8",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "line_items",
+        "options": {}
+      },
+      "id": "c2505a31-9e5f-41f4-80f6-d79047864cbc",
+      "name": "Split Out",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        3424,
+        1520
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $input.first().json.output;\nlet raw = output.result || output.completion || output.text || JSON.stringify(output);\n\n// Step 1: Remove backticks if present\nraw = raw.trim();\nif (raw.startsWith(\"```json\")) {\n  raw = raw.replace(/^```json\\s*/, '').replace(/```$/, '').trim();\n} else if (raw.startsWith(\"```\")) {\n  raw = raw.replace(/^```\\s*/, '').replace(/```$/, '').trim();\n}\n\n// Step 2: Find full JSON block from first { to last }\nconst start = raw.indexOf('{');\nconst end = raw.lastIndexOf('}');\nif (start === -1 || end === -1 || end <= start) {\n  return [{\n    json: {\n      error: \"No valid JSON block found\",\n      raw_output: raw\n    }\n  }];\n}\n\nlet jsonCandidate = raw.substring(start, end + 1).trim();\n\n// Step 3: Unescape characters\njsonCandidate = jsonCandidate\n  .replace(/\\\\n/g, '')\n  .replace(/\\\\t/g, '')\n  .replace(/\\\\\"/g, '\"')\n  .replace(/\\\\'/g, \"'\")\n  .replace(/\\\\\\\\/g, '\\\\');\n\n// Step 4: Parse JSON safely\ntry {\n  let parsed = JSON.parse(jsonCandidate);\n\n  // Only double-parse if it looks like stringified JSON\n  if (typeof parsed === \"string\" && parsed.trim().startsWith('{') && parsed.trim().endsWith('}')) {\n    parsed = JSON.parse(parsed);\n  }\n\n  return [{ json: parsed }];\n} catch (e) {\n  return [{\n    json: {\n      error: \"JSON parsing failed\",\n      raw_output: raw,\n      attempted_extraction: jsonCandidate,\n      message: e.message\n    }\n  }];\n}\n"
+      },
+      "id": "f265d1f4-ccbb-4394-b561-530504364b84",
+      "name": "Post-Processing",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        3024,
+        1632
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=- You must respond ONLY with valid raw rendered JSON.\n- Do NOT include the word \"json\".\n- Do NOT include the word \"```json\".\n- Do NOT use triple backticks or markdown formatting.\n- Do NOT wrap the response in any key like \"output\".\n- Do NOT write anything starting at output directly start with valid root-level JSON.\n- Only respond with a valid, root-level JSON object.\n- Do NOT skip any line item. Continue extracting all line items until the sum of all line_total values exactly equals the total sale amount extracted from the invoice. This verification ensures that all items are fully extracted and no entries are missed. If the totals do not match, keep parsing and extracting additional line items until they do. Only then stop.\n\nText to convert: {{ $json.text }}",
+        "options": {
+          "systemMessage": "=You are a document parsing assistant designed to extract structured data from invoice PDFs for automated uploading and validation in a financial system.\n\nExtract the following fields from the invoice text:\n\ninvoice_number: Extract from the 'Invoice No' field.\n\nvendor_name: Company name issuing the invoice.\n\ninvoice_date: Format as DD/MM/YYYY.\n\npo_number: Extract the PO number or return null if not found.\n\npo_date: Extract the PO date in DD/MM/YYYY format or return null if not found.\n\ntotal_amount: Extract the invoice total as a float.\n\ntax_details: Include total CGST, total SGST.\n\nline_items: List of all items in the invoice. For each item, extract:\n\n  Serial No.: Item Serial No. In invoice.\n\n  code: The TWW word and its postfix only (e.g., TWW, TWW-Cover, TWW-HPCN). Do not include HSN code or numbers. This field must always be present.\n\n  description: Item description, never include HSN code of product in product description.\n\n  last character: This is a single word/character string found just after or around the line item, typically at the end of the price line or just on the next line. It will never be a number, HSN code, GST %, or unit (like PCS). Examples: G, C, S, 5C, .C If nothing is present (only digits or blank), return \"\". Check the next 1–2 lines after each item if it's not found on the same line.\n\n  quantity: Quantity value.\n\n  unit_price: Price per unit.\n\n  line_total: Total price for the line.\n\n  hsn_code: HSN code of the item.\n\n  cgst: Only extract the CGST percentage (e.g., 9%, 6%) as written in the invoice. Do not calculate based on line total.\n\n  sgst: Only extract the SGST percentage (e.g., 9%, 6%) as written in the invoice. Do not calculate based on line total.\n\nImportant: Double-check that all line items are extracted without omission.\n\nDo NOT skip any line item. Continue extracting all line items until the sum of all line_total values exactly equals the total_amount extracted from the invoice. This verification ensures that all items are fully extracted and no entries are missed. If the totals do not match, keep parsing and extracting additional line items until they do. Only then stop."
+        }
+      },
+      "id": "94af41f9-f379-4030-9b93-b36567a80637",
+      "name": "Text Extractor",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        2608,
+        1664
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {
+        "fileSelector": "=E:/SentIImenta AI/SentIImenta AI Website/White Willow/Invoice Validator/May Invoices/Jumax TWW Daily PO Invoices 05_05_2025/661.pdf",
+        "options": {}
+      },
+      "id": "80f1f877-3739-4d39-999e-6b5accaf950f",
+      "name": "Read/Write Files from Disk",
+      "type": "n8n-nodes-base.readWriteFile",
+      "position": [
+        2160,
+        1648
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "18f61f00-03e8-4fd4-b305-f3742bb32d17",
+              "name": "text",
+              "type": "string",
+              "value": "={{ $('Extract from File1').item.json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8d0370a8-ad58-42a1-a8af-641405e45431",
+      "name": "Send Raw Text Again",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        3488,
+        1760
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "// --- Helper: Levenshtein Distance ---\nfunction levenshtein(a, b) {\n  const matrix = Array.from({ length: b.length + 1 }, (_, i) => [i]);\n  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;\n\n  for (let i = 1; i <= b.length; i++) {\n    for (let j = 1; j <= a.length; j++) {\n      const cost = a[j - 1] === b[i - 1] ? 0 : 1;\n      matrix[i][j] = Math.min(\n        matrix[i - 1][j] + 1,\n        matrix[i][j - 1] + 1,\n        matrix[i - 1][j - 1] + cost\n      );\n    }\n  }\n  return matrix[b.length][a.length];\n}\n\n// --- Helper: Clean String ---\nfunction cleanString(str) {\n  if (str && typeof str === 'string') {\n    return str\n      .replace(/(^\"|\"$|\\[|\\])/g, '') // remove unwanted chars\n      .replace(/\\s{2,}/g, ' ')       // replace multiple spaces with one\n      .toLowerCase()\n      .trim();\n  }\n  return '';\n}\n\n// --- 1. Get all SKUs from \"Split Out\" and corresponding Unique Keys ---\nconst splitOutItems = $items('Split Out');\nconst uniqueKeyItems = $items('Generate Unique Key');\n\nconst inputSKUs = splitOutItems.map((item, index) => {\n  const uniqueKeyItem = uniqueKeyItems[index];\n\n  const code = cleanString(item.json.code);\n  const description = cleanString(item.json.description);\n  // handle both possible keys for last character\n  const lastCharacter = cleanString(item.json['last_character'] ?? item.json['last character'] ?? '');\n\n  let sku = `${code} ${description}`;\n\n  if (lastCharacter) {\n    if (/^[a-z0-9]+$/i.test(lastCharacter)) {\n      // Append directly without space if alphanumeric postfix\n      sku += lastCharacter;\n    } else {\n      // Otherwise, add a space\n      sku += ` ${lastCharacter}`;\n    }\n  }\n  \n  sku = sku.trim().replace(/\\s{2,}/g, ' ');\n\n  return {\n    Unique_Key: uniqueKeyItem ? uniqueKeyItem.json['Unique Key'] || uniqueKeyItem.json.Unique_Key || '' : '',\n    serial_no: item.json['Serial No.'] ?? item.json['Serial_No.'] ?? '',\n    sku,\n    quantity: item.json.quantity,\n    unit_price: item.json.unit_price,\n    line_total: item.json.line_total,\n    hsn_code: item.json.hsn_code,\n    cgst: item.json.cgst,\n    sgst: item.json.sgst\n  };\n});\n\n// --- 2. Get all rows from \"Google Sheets\" ---\nconst sheetRows = $items('Fetch Master Data').map(i => i.json);\n\n// --- 3. Set Levenshtein match threshold ---\nconst threshold = 5;\nconst results = [];\n\nfor (const inputSKU of inputSKUs) {\n  let bestMatch = null;\n  let lowestDistance = Infinity;\n\n  for (const row of sheetRows) {\n    const descriptionRaw = row['Jumax PDF Description'] || '';\n    const description = cleanString(descriptionRaw);\n    if (!description) continue;\n\n    const distance = levenshtein(inputSKU.sku, description);\n\n    if (distance < lowestDistance) {\n      lowestDistance = distance;\n      bestMatch = row;\n    }\n  }\n\n  if (bestMatch && lowestDistance <= threshold) {\n    const jumaxASIN = cleanString(bestMatch['ASIN']);\n    const tASIN = cleanString(bestMatch['TWW ASIN']);\n    const cost = Number(bestMatch['Cost '] || bestMatch['Cost'] || bestMatch['Rate']);\n    const unitPrice = Number(inputSKU.unit_price);\n\n    const asinMatch = jumaxASIN === tASIN;\n    const costMatch = cost === unitPrice;\n    const allConditionsMet = asinMatch && costMatch;\n\n    results.push({\n      json: {\n        Unique_Key: inputSKU.Unique_Key,\n        serial_no: inputSKU.serial_no,\n        matchedSKU: inputSKU.sku,\n        matchedRow: bestMatch,\n        distance: lowestDistance,\n        Jumax_ASIN: jumaxASIN,\n        T_ASIN: tASIN,\n        asinMatch,\n        costMatch,\n        quantity: inputSKU.quantity,\n        unit_price: inputSKU.unit_price,\n        costFromSheet: cost,\n        line_total: inputSKU.line_total,\n        hsn_code: inputSKU.hsn_code,\n        cgst: inputSKU.cgst,\n        sgst: inputSKU.sgst,\n        message: allConditionsMet\n          ? '✅ Match found, ASINs match, and Cost matches Unit Price'\n          : asinMatch\n            ? '⚠️ ASINs match but Cost does not match Unit Price'\n            : '❌ Match found but ASINs do not match',\n        All_Conditions_Met: allConditionsMet\n      }\n    });\n  } else {\n    results.push({\n      json: {\n        Unique_Key: inputSKU.Unique_Key,\n        serial_no: inputSKU.serial_no,\n        matchedSKU: inputSKU.sku,\n        matchedRow: null,\n        message: `❌ No match found for SKU: ${inputSKU.sku}`,\n        closestDistance: lowestDistance,\n        quantity: inputSKU.quantity,\n        unit_price: inputSKU.unit_price,\n        line_total: inputSKU.line_total,\n        hsn_code: inputSKU.hsn_code,\n        cgst: inputSKU.cgst,\n        sgst: inputSKU.sgst,\n        All_Conditions_Met: false\n      }\n    });\n  }\n}\n\n// --- 4. Return final results ---\nreturn results;\n"
+      },
+      "id": "7a38bace-d9a3-4bdf-9a59-64a34f6b8d39",
+      "name": "Validation",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        4304,
+        1520
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1L2DN1aGp1uhLhNm7TrI54tC0Yuk4ER9y2DU-jbHrSrk",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1L2DN1aGp1uhLhNm7TrI54tC0Yuk4ER9y2DU-jbHrSrk/edit?usp=drivesdk",
+          "cachedResultName": "Invoice Validation"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1L2DN1aGp1uhLhNm7TrI54tC0Yuk4ER9y2DU-jbHrSrk/edit#gid=0",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "value": {
+            "HSN": "={{ $('Split Out').item.json.hsn_code }}",
+            "Qty": "={{ $('Split Out').item.json.quantity }}",
+            "CGST%": "={{ $('Split Out').item.json.cgst }}",
+            "SGST%": "={{ $('Split Out').item.json.sgst }}",
+            "SR No.": "={{ $('Split Out').item.json['serial_no'] }}",
+            "PO Date": "={{ $('Post-Processing').item.json.po_date }}",
+            "PO Number": "={{ $('Post-Processing').item.json.po_number }}",
+            "Unique Key": "={{ $json['Unique Key'] }}",
+            "Invoice No.": "={{ $('Post-Processing').item.json.invoice_number }}",
+            "Sale Amount": "={{ $('Split Out').item.json.line_total }}",
+            "Invoice Date": "={{ $('Post-Processing').item.json.invoice_date }}",
+            "Rate (Vendor)": "={{ $('Split Out').item.json.unit_price }}",
+            "TWW Description": "={{ \n  $node[\"Split Out\"].json[\"code\"] + \" \" + \n  $node[\"Split Out\"].json[\"description\"] + \" \" + \n  ($node[\"Split Out\"].json[\"last character\"] ?? $node[\"Split Out\"].json[\"last_character\"] ?? \"\") \n}}"
+          },
+          "schema": [
+            {
+              "id": "SR No.",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "SR No.",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Invoice No.",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Invoice No.",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Unique Key",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Unique Key",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Invoice Date",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Invoice Date",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PO Number",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "PO Number",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PO Date",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "PO Date",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TWW Description",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "TWW Description",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "HSN",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "HSN",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Qty",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Qty",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Rate (Vendor)",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Rate (Vendor)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sale Amount",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Sale Amount",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CGST%",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "CGST%",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SGST%",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "SGST%",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Matched Cost (Actual Price)",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Matched Cost (Actual Price)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Matched Unit Price (Vendor Price)",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Matched Unit Price (Vendor Price)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Price Difference (₹)",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Price Difference (₹)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total Loss/Gain (₹)",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Total Loss/Gain (₹)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Mismatch Note",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Mismatch Note",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SKU Matched",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "SKU Matched",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ASIN",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "ASIN",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Taxable Amount",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Taxable Amount",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Invoice Amount",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Invoice Amount",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total Quantity",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Total Quantity",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "87945114-a1b6-4bba-b725-f776dc167606",
+      "name": "Send Invoice Data",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        3872,
+        1520
+      ],
+      "typeVersion": 4.5,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1ZBODB_mwa17Amtxnme5l8MxyEcWHYy9SSjQ6atPJXhc",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZBODB_mwa17Amtxnme5l8MxyEcWHYy9SSjQ6atPJXhc/edit?usp=drivesdk",
+          "cachedResultName": "Mapping Sheet Final"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": 305288444,
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZBODB_mwa17Amtxnme5l8MxyEcWHYy9SSjQ6atPJXhc/edit#gid=305288444",
+          "cachedResultName": "Cost-Priority sheet-GPT"
+        },
+        "options": {}
+      },
+      "id": "30a2cc5f-334d-4bf1-95fe-06c08c24d172",
+      "name": "Fetch Master Data",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        4128,
+        1520
+      ],
+      "executeOnce": true,
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1L2DN1aGp1uhLhNm7TrI54tC0Yuk4ER9y2DU-jbHrSrk",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1L2DN1aGp1uhLhNm7TrI54tC0Yuk4ER9y2DU-jbHrSrk/edit?usp=drivesdk",
+          "cachedResultName": "Invoice Validation"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1L2DN1aGp1uhLhNm7TrI54tC0Yuk4ER9y2DU-jbHrSrk/edit#gid=0",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "value": {
+            "Unique Key": "={{ $json.Unique_Key }}",
+            "Mismatch Note": "={{ $('Validation').item.json.message }}",
+            "Total Loss/Gain (₹)": "={{ ($json.unit_price - $json.costFromSheet) * $json.quantity}}",
+            "Price Difference (₹)": "={{ $json.unit_price - $json.costFromSheet }}",
+            "Matched Cost (Actual Price)": "={{ $json.costFromSheet }}",
+            "Matched Unit Price (Vendor Price)": "={{ $('Validation').item.json.unit_price }}"
+          },
+          "schema": [
+            {
+              "id": "SR No.",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "SR No.",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Invoice No.",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Invoice No.",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Unique Key",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Unique Key",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Invoice Date",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Invoice Date",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PO Number",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "PO Number",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PO Date",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "PO Date",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TWW Description",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "TWW Description",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "HSN",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "HSN",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Qty",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Qty",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Rate (Vendor)",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Rate (Vendor)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sale Amount",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "Sale Amount",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CGST%",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "CGST%",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SGST%",
+              "type": "string",
+              "display": true,
+              "removed": true,
+              "required": false,
+              "displayName": "SGST%",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Matched Cost (Actual Price)",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "required": false,
+              "displayName": "Matched Cost (Actual Price)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Matched Unit Price (Vendor Price)",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Matched Unit Price (Vendor Price)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Price Difference (₹)",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Price Difference (₹)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total Loss/Gain (₹)",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Total Loss/Gain (₹)",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Mismatch Note",
+              "type": "string",
+              "display": true,
+              "required": false,
+              "displayName": "Mismatch Note",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "type": "string",
+              "display": true,
+              "removed": false,
+              "readOnly": true,
+              "required": false,
+              "displayName": "row_number",
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "Unique Key"
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "dd15ac00-33aa-497c-8284-7fdb30b353d4",
+      "name": "Update Results",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        4608,
+        1520
+      ],
+      "typeVersion": 4.5
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1907451f-cc09-45d7-a04f-113f8f94d918",
+              "name": "Unique Key",
+              "type": "string",
+              "value": "={{ $('If2').item.json.invoice_number + \"-\" + $itemIndex }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "47770244-cd29-42ca-b007-828d651e4d89",
+      "name": "Generate Unique Key",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        3648,
+        1520
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "f106c6df-aedf-4e76-afad-cadf63589e89",
+      "name": "Extract from File1",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        2384,
+        1648
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "e73c23b4-39e9-4719-8a72-53808eefe607",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "JSON parsing failed"
+            },
+            {
+              "id": "b3b7d3d4-c709-40fe-8782-ffd34180ba8b",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "No valid JSON block found"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "726cca85-3d64-42b3-92f7-2c340f6c627a",
+      "name": "If2",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        3248,
+        1584
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "content": "## Reading Invoice's PDF File Locally",
+        "height": 280,
+        "width": 620,
+        "color": 7
+      },
+      "id": "06e95bc0-80e7-4a3e-ba40-baecd99c0f5f",
+      "name": "Sticky Note12",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1904,
+        1568
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Extracting Details From Invoice PDF",
+        "height": 280,
+        "width": 380,
+        "color": 7
+      },
+      "id": "f28fe15f-28ce-4b88-8b9f-32967bfe7377",
+      "name": "Sticky Note13",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2544,
+        1568
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Processing Output",
+        "height": 220,
+        "color": 7
+      },
+      "id": "0c0a11aa-9a27-46c5-b51b-8b9c31b975d3",
+      "name": "Sticky Note14",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2944,
+        1568
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Fallback On Error",
+        "height": 220,
+        "width": 220,
+        "color": 7
+      },
+      "id": "30a77d58-6fb3-4a48-ac1b-a5efc4a4283a",
+      "name": "Sticky Note15",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3424,
+        1712
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Extracting Line Items",
+        "height": 220,
+        "width": 400,
+        "color": 7
+      },
+      "id": "fcca763d-504a-479c-8ff6-8c077cfed2e8",
+      "name": "Sticky Note16",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3392,
+        1472
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Sending Data To G-Sheet",
+        "height": 240,
+        "width": 220,
+        "color": 7
+      },
+      "id": "d3530092-c0eb-45c6-9ced-f056b923061f",
+      "name": "Sticky Note17",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3808,
+        1440
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Fetch Master Data & Validating Invoice Extracted Data",
+        "height": 240,
+        "width": 440,
+        "color": 7
+      },
+      "id": "b05b72c6-8e30-4eb5-8d6b-405c2552732d",
+      "name": "Sticky Note18",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4048,
+        1440
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## Update Validation Result",
+        "height": 240,
+        "width": 300,
+        "color": 7
+      },
+      "id": "7c25052a-980e-4a8b-b04a-b4b1a62fd9e7",
+      "name": "Sticky Note19",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4512,
+        1440
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Setup1": {
+      "main": [
+        [
+          {
+            "node": "Only invoice mails with attachments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Output": {
+      "main": [
+        [
+          {
+            "node": "Append to Reconciliation Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Extract from File2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Apply Data Extraction Rules",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rename file1": {
+      "main": [
+        [
+          {
+            "node": "Move to the correct folder1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Setup1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File2": {
+      "main": [
+        [
+          {
+            "node": "Apply Data Extraction Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload PDF to Drive1": {
+      "main": [
+        [
+          {
+            "node": "Rename file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Apply Data Extraction Rules",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Data Extraction Rules": {
+      "main": [
+        [
+          {
+            "node": "Map Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move to the correct folder1": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Only invoice mails with attachments": {
+      "main": [
+        [
+          {
+            "node": "Upload PDF to Drive1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Upload": {
+      "main": [
+        [
+          {
+            "node": "Mistral Signed URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract schema": {
+      "main": [
+        [
+          {
+            "node": "Get already processed rows from Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Field Extractor": {
+      "main": [
+        [
+          {
+            "node": "Add google drive Id back",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral DOC OCR": {
+      "main": [
+        [
+          {
+            "node": "Join OCR Pages and remove id field",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Upload1": {
+      "main": [
+        [
+          {
+            "node": "Mistral Signed URL1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Fields Schema": {
+      "main": [
+        [
+          {
+            "node": "extract schema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral IMAGE OCR": {
+      "main": [
+        [
+          {
+            "node": "Join OCR Pages and remove id field",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Signed URL": {
+      "main": [
+        [
+          {
+            "node": "Mistral DOC OCR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Signed URL1": {
+      "main": [
+        [
+          {
+            "node": "Mistral IMAGE OCR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file for OCR": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter processed files": {
+      "main": [
+        [
+          {
+            "node": "Download file for OCR",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add google drive Id back": {
+      "main": [
+        [
+          {
+            "node": "Save data to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Field Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On new file in Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Load files from Google Drive folder",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Fields Schema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Load files from Google Drive folder",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Fields Schema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Join OCR Pages and remove id field": {
+      "main": [
+        [
+          {
+            "node": "Field Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load files from Google Drive folder": {
+      "main": [
+        [
+          {
+            "node": "Filter processed files",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get already processed rows from Sheets": {
+      "main": [
+        [
+          {
+            "node": "Filter processed files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Mistral Upload1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mistral Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Generate Unique Key",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation": {
+      "main": [
+        [
+          {
+            "node": "Update Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Extractor": {
+      "main": [
+        [
+          {
+            "node": "Post-Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post-Processing": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Master Data": {
+      "main": [
+        [
+          {
+            "node": "Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Invoice Data": {
+      "main": [
+        [
+          {
+            "node": "Fetch Master Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Unique Key": {
+      "main": [
+        [
+          {
+            "node": "Send Invoice Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Raw Text Again": {
+      "main": [
+        [
+          {
+            "node": "Text Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Text Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Send Raw Text Again",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "errorWorkflow": "",
+    "timezone": "America/New_York"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "572b8099-dae1-4044-b569-40ea794c7fed",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-06-23T09:43:08.859Z",
+      "createdAt": "2025-06-23T09:43:08.859Z",
+      "role": "workflow:owner",
+      "workflowId": "yGcPLzPzfLwkVJNb",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-03-15T18:54:26.296Z",
+      "createdAt": "2025-03-15T18:54:26.296Z",
+      "id": "LcKGzshuAfGAnTK9",
+      "name": "Do sprawdzenia"
+    }
+  ]
+}
