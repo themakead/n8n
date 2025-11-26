@@ -1,0 +1,257 @@
+{
+  "updatedAt": "2025-08-16T08:24:15.121Z",
+  "createdAt": "2025-02-28T11:06:53.448Z",
+  "id": "ixkOznBwbg4ImuXY",
+  "name": "EmailAgent",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "gpt-5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        336,
+        256
+      ],
+      "id": "0a27a466-ae2b-44dd-8d26-3efbe8b8e3a4",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EJgMjh9fB0j2lVkm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        160,
+        0
+      ],
+      "id": "898c4e5c-e896-4058-868c-b85eb39db73d",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "89529c60-a854-4870-a182-c172cbb777b3",
+              "name": "",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        0
+      ],
+      "id": "8d62e9de-aaba-4744-8bd4-e638dbd6531e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "=JESTEŚ ZAAWANSOWANYM AGENTEM E-MAILOWYM INTEGRUJĄCYM SIĘ Z n8n. TWOJE ZADANIE TO SKUTECZNE ODCZYTYWANIE, ANALIZA, WYSYŁANIE I ODPOWIADANIE NA WIADOMOŚCI E-MAIL.\n### TWOJE KLUCZOWE FUNKCJE:  \n\n1. **WYSYŁANIE E-MAILI**  \n   - FORMUŁUJ NOWE WIADOMOŚCI NA PODSTAWIE PODANYCH WYTYCZNYCH  \n   - UWZGLĘDNIAJ POPRAWNĄ STRUKTURĘ E-MAILA (TYTUŁ, TREŚĆ, STOPKA)  \n   - ZAPEWNIJ PROFESJONALNY TON I STYL KOMUNIKACJI  \n\nKiedy urzytkownik prosi o wysłanie wiadmośći email o konkretnej treści to przekaż tą treść bez edytowania jej. Przepisz ją dokłądnie tak jak prosi urzytkownik.\n\n\n### CZEGO NIE ROBIĆ:  \n- **NIE WYSYŁAJ AUTOMATYCZNYCH ODPOWIEDZI NA SPAM**  \n- **NIE TWÓRZ NIEJASNYCH LUB NIEPROFESJONALNYCH ODPOWIEDZI**  \n- **NIE POMIJAJ WAŻNYCH INFORMACJI W ODPOWIEDZI**  \n- **NIE USUWAJ ORYGINALNEJ TREŚCI BEZ WYTYCZNYCH**  \n \n\n!!!Podpisuj się na końcu wiadomości email jako \"Grzegorz Gajek\"!!!"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        448,
+        0
+      ],
+      "id": "8e8f5c41-8f5d-445e-8030-0feb24307e06",
+      "name": "emailAgent"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', `Jako podpis,: Pozdrawiam Grzegorz Gajek`, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        496,
+        256
+      ],
+      "id": "1f6a1977-d25e-4e7f-82b7-c865388c640d",
+      "name": "Send a message in Gmail",
+      "webhookId": "896abd23-627a-43f6-8af7-dfb9748f642e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RxnVylwGtY44Eer9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        656,
+        256
+      ],
+      "id": "7181b1b0-4518-433b-853d-66003d7bfa46",
+      "name": "Get many messages in Gmail",
+      "webhookId": "e3a39d62-6cfe-4825-a08b-d0f969141e20",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RxnVylwGtY44Eer9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message_ID', ``, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        832,
+        256
+      ],
+      "id": "4cda045e-b2cd-402c-ab75-4cf86d5bc391",
+      "name": "Reply to a message in Gmail",
+      "webhookId": "5b8f7d06-603f-4861-be5a-87257b9ef686",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RxnVylwGtY44Eer9",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "emailAgent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "emailAgent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "emailAgent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "emailAgent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "emailAgent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply to a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "emailAgent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "2c4dca61-ea93-414b-b1f4-a9de617e9550",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-02-28T11:06:53.448Z",
+      "createdAt": "2025-02-28T11:06:53.448Z",
+      "role": "workflow:owner",
+      "workflowId": "ixkOznBwbg4ImuXY",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-03-15T18:53:11.351Z",
+      "createdAt": "2025-03-15T18:53:11.351Z",
+      "id": "ovE7Xowr5aUj677q",
+      "name": "Działa"
+    }
+  ]
+}
