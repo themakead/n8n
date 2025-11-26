@@ -1,0 +1,28 @@
+{
+  "updatedAt": "2025-07-01T12:35:15.321Z",
+  "createdAt": "2025-03-21T15:33:29.751Z",
+  "id": "XqkEoTSt6HvT4Mqt",
+  "name": "RAG 2025",
+  "active": false,
+  "isArchived": true,
+  "nodes": [],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "d1f4b402-b914-4f10-9a32-2b4bca2fa292",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-03-21T15:33:29.751Z",
+      "createdAt": "2025-03-21T15:33:29.751Z",
+      "role": "workflow:owner",
+      "workflowId": "XqkEoTSt6HvT4Mqt",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
