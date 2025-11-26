@@ -1,0 +1,58 @@
+{
+  "updatedAt": "2025-06-23T09:21:35.462Z",
+  "createdAt": "2025-06-23T09:19:36.075Z",
+  "id": "XR9zEpwfgbV2AQpY",
+  "name": "sub n8n buldier",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# Workflow Builder\n",
+        "height": 340,
+        "width": 1280,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1138,
+        360
+      ],
+      "id": "c29f98cf-70fa-4522-b739-958faaa69a2c",
+      "name": "Sticky Note"
+    },
+    {
+      "id": "30537d4d-b95d-43ad-83c5-ff0a33c8bc96",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        918,
+        360
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "bdf3686a-4df3-40b0-8bc1-ae0954d19750",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-06-23T09:19:36.075Z",
+      "createdAt": "2025-06-23T09:19:36.075Z",
+      "role": "workflow:owner",
+      "workflowId": "XR9zEpwfgbV2AQpY",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
