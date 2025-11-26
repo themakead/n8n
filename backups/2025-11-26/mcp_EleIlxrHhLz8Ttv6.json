@@ -1,0 +1,107 @@
+{
+  "updatedAt": "2025-07-01T12:34:56.915Z",
+  "createdAt": "2025-03-20T06:45:39.604Z",
+  "id": "EleIlxrHhLz8Ttv6",
+  "name": "MCP",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        0
+      ],
+      "id": "0159b65d-84a9-4162-bead-5eac7e1719b1",
+      "name": "When chat message received",
+      "webhookId": "e008ddd3-585c-43e7-9efb-dc21def6668f"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a helpful assistant"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        440,
+        0
+      ],
+      "id": "f1ed4a20-8adc-47f3-8e6b-bc52ee4bc673",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        340,
+        240
+      ],
+      "id": "2559402e-b6e5-414b-b06d-077990b9a724",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EJgMjh9fB0j2lVkm",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "ba54372d-693b-4a13-83f6-9865498d381d",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-03-20T06:45:39.604Z",
+      "createdAt": "2025-03-20T06:45:39.604Z",
+      "role": "workflow:owner",
+      "workflowId": "EleIlxrHhLz8Ttv6",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
