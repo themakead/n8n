@@ -1,0 +1,126 @@
+{
+  "updatedAt": "2025-11-26T14:58:09.116Z",
+  "createdAt": "2025-11-26T13:08:10.702Z",
+  "id": "A7Fmqr0itQ7jTsvm",
+  "name": "My workflow 7",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "id": "cd7f5dee-38e7-4039-91dd-8e5df1293c62",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -128,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "filters": {},
+        "requestOptions": {}
+      },
+      "id": "71879e0b-9d2f-48b1-a939-80863069939b",
+      "name": "n8n - Pobierz Workflowy",
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        96,
+        32
+      ],
+      "credentials": {
+        "n8nApi": {
+          "id": "qzY07BETJNocgmr8",
+          "name": "n8n account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "mode": "name",
+          "value": "themakead"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "n8n",
+          "mode": "list",
+          "cachedResultName": "n8n",
+          "cachedResultUrl": "https://github.com/themakead/n8n"
+        },
+        "filePath": "={{ \"backups/\" + $now.toFormat('yyyy-MM-dd') + \"/\" + $json.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() + \"_\" + $json.id + \".json\" }}",
+        "fileContent": "={{ JSON.stringify($json, null, 2).replace(/***UKRYTY_OPENAI***[a-zA-Z0-9\\-_]+/g, '***UKRYTY_KLUCZ***').replace(/sk-[a-zA-Z0-9\\-_]+/g, '***UKRYTY_KLUCZ***') }}",
+        "commitMessage": "={{ \"Auto-backup: \" + $json.name }}"
+      },
+      "id": "8c59d0b6-9a0a-46bd-b8a4-201612836a15",
+      "name": "GitHub - Zapisz",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [
+        320,
+        32
+      ],
+      "webhookId": "7be63878-b2cf-4d87-b9bf-86b11e4ea6e8",
+      "credentials": {
+        "githubApi": {
+          "id": "EgW4KBBCvFNoXS3E",
+          "name": "GitHub account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "n8n - Pobierz Workflowy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n - Pobierz Workflowy": {
+      "main": [
+        [
+          {
+            "node": "GitHub - Zapisz",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "b0913cd3-6b2d-4e67-8589-339dbaf8f7f0",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-11-26T13:08:10.702Z",
+      "createdAt": "2025-11-26T13:08:10.702Z",
+      "role": "workflow:owner",
+      "workflowId": "A7Fmqr0itQ7jTsvm",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
