@@ -1,0 +1,523 @@
+{
+  "updatedAt": "2025-07-17T11:42:57.531Z",
+  "createdAt": "2025-07-17T11:42:08.463Z",
+  "id": "Ov06Vd5t01vBM1iO",
+  "name": "Hiper-Personalizacja Zimnych Maili. Automatyzacja Która Rozumie Klienta",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1540,
+        100
+      ],
+      "id": "c1724ca4-ad48-4dd0-bce4-12fc02890798",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://www.google.com/maps/search/restauracja+warszawa",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          },
+          "proxy": ""
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1320,
+        100
+      ],
+      "id": "b6852210-dc61-4e93-9c9b-e32eefc4521b",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json.data\nconst regex = /https?:\\/\\/[^\\/\\s\"'>]+/g\nconst websites = input.match(regex)\nreturn websites.map(website => ({json:{website}}))"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1100,
+        100
+      ],
+      "id": "f9838c72-9652-45e6-a617-a98bb3ffa9fd",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "04c23da6-2b03-437a-93ba-e66b8d1328f9",
+              "leftValue": "={{ $json.website }}",
+              "rightValue": "schema",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "ad13095b-180d-4c78-9995-f9b70d4fe9b9",
+              "leftValue": "={{ $json.website }}",
+              "rightValue": "google",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "d133ccca-5ab0-4dc9-b0d1-c815683941c2",
+              "leftValue": "={{ $json.website }}",
+              "rightValue": "gstatic",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "fee908e3-65f1-4644-8320-8e5e68a3c85a",
+              "leftValue": "={{ $json.website }}",
+              "rightValue": "gg",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -880,
+        100
+      ],
+      "id": "992f6ff7-944b-41de-a56f-0e5e9fd5b3d9",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        -660,
+        100
+      ],
+      "id": "0b2225c2-21d9-424e-a300-eed4791e4684",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "maxItems": 10
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -440,
+        100
+      ],
+      "id": "6021b8af-b96d-4732-acb1-647b6a135f53",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -220,
+        100
+      ],
+      "id": "2c86993c-bdc4-476f-80cd-5783418dc726",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.website }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        200
+      ],
+      "id": "05b38b43-1842-4100-9d61-858764515acb",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        200
+      ],
+      "id": "6550689b-0986-4db3-93b1-6d4fd1f4f292",
+      "name": "Wait",
+      "webhookId": "69420831-2149-408f-8aa4-74006d53a681"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json.data\nconst regex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.(?!jpeg|jpg|png|gif|webp|svg)[a-zA-Z]{2,}/g\nconst emails = input.match(regex)\nreturn {json: {emails:emails}}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        200
+      ],
+      "id": "493472a6-6caa-41a3-8c74-84f02802e244",
+      "name": "Extract Emails"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5cfb23a6-0dfe-4b86-83e4-ab8291da3c9b",
+      "name": "Wait1",
+      "webhookId": "9852cda2-5703-4057-9823-3d6f7c45fdf2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c4dcfcf6-51a1-473b-b424-31900a8a74c3",
+              "leftValue": "={{ $json.emails }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "20e5f7f5-c836-4be7-b379-110c1dc53867",
+      "name": "Filter1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "emails",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        440,
+        0
+      ],
+      "id": "59ab00fe-0d97-473e-bfde-be0383b78056",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "id": "f5a3369d-3d28-4302-847e-a09ddad4a000",
+      "name": "Remove Duplicates1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1eT5wewTj_51Azh3CK_LaPuvXIpvuqxv4EzDZ1A8zoQI",
+          "mode": "list",
+          "cachedResultName": "Scrape google maps ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1eT5wewTj_51Azh3CK_LaPuvXIpvuqxv4EzDZ1A8zoQI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2056136577,
+          "mode": "list",
+          "cachedResultName": "emails",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1eT5wewTj_51Azh3CK_LaPuvXIpvuqxv4EzDZ1A8zoQI/edit#gid=2056136577"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "emails": "={{ $json.emails }}"
+          },
+          "matchingColumns": [
+            "emails"
+          ],
+          "schema": [
+            {
+              "id": "emails",
+              "displayName": "emails",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "useAppend": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        880,
+        0
+      ],
+      "id": "15d98e48-2a37-47fa-a84e-70b874c2b500",
+      "name": "Google Sheets"
+    },
+    {
+      "parameters": {
+        "content": "https://www.youtube.com/watch?v=_exyCRC7Ss8&lc=UgwOepXmpDF82CKR2-p4AaABAg.AKfLkpA3Yz_AKfVFEU3OfP"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1040,
+        -260
+      ],
+      "typeVersion": 1,
+      "id": "3bcfa052-fdf1-41cf-b046-e2bceb70b39d",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Extract Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Emails": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Filter1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter1": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates1": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "8d137c6b-1a22-43cc-98d9-f36aee3c9360",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-07-17T11:42:08.463Z",
+      "createdAt": "2025-07-17T11:42:08.463Z",
+      "role": "workflow:owner",
+      "workflowId": "Ov06Vd5t01vBM1iO",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-03-15T18:54:26.296Z",
+      "createdAt": "2025-03-15T18:54:26.296Z",
+      "id": "LcKGzshuAfGAnTK9",
+      "name": "Do sprawdzenia"
+    }
+  ]
+}
