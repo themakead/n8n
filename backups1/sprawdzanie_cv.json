@@ -1,0 +1,733 @@
+{
+  "updatedAt": "2025-03-15T18:58:52.737Z",
+  "createdAt": "2025-03-07T09:38:00.746Z",
+  "id": "3k1g9UxDWh1xwi75",
+  "name": "Sprawdzanie CV",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "attachment_0",
+        "options": {}
+      },
+      "id": "273d5459-bb38-4073-b27a-726d667ea122",
+      "name": "Extract from File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        380,
+        520
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {
+          "summarizationMethodAndPrompts": {
+            "values": {
+              "combineMapPrompt": "=Write a concise summary of the following:\n\nCity: {{ $json.output.city }}\nBirthdate: {{ $json.output.birthdate }}\nEducational qualification: {{ $json.output[\"Educational qualification\"] }}\nJob History: {{ $json.output[\"Job History\"] }}\nSkills: {{ $json.output.Skills }}\n\nUse 100 words or less. Be concise and conversational.",
+              "prompt": "=Write a concise summary of the following:\n\nCity: {{ $json.output.city }}\nBirthdate: {{ $json.output.birthdate }}\nEducational qualification: {{ $json.output[\"Educational qualification\"] }}\nJob History: {{ $json.output[\"Job History\"] }}\nSkills: {{ $json.output.Skills }}\n\nUse 100 words or less. Be concise and conversational."
+            }
+          }
+        }
+      },
+      "id": "5607d57e-46d8-4d5f-9aae-d71be840a464",
+      "name": "Summarization Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainSummarization",
+      "position": [
+        1540,
+        520
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a3d049b0-5a70-4e7b-a6f2-81447da5282a",
+              "name": "profile_wanted",
+              "type": "string",
+              "value": "We are an AI automation agency working with various no and low-code tools. \n\nWe are looking for a full-time developer with expertise in Make.com and N8N primarily"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e51adc78-057b-4087-9165-d1879faf7a46",
+      "name": "Profile Wanted",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1940,
+        520
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"vote\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n\t\t\"consideration\": {\n\t\t\t\"type\": \"string\"\n\t\t}\n\t}\n}"
+      },
+      "id": "d272805d-2e17-477a-80ba-d88ff0d88599",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        2380,
+        740
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Profile Submitted:\n{{ $json.profile_wanted }}\n\nCandidate summary:\n{{ $('Summarization Chain').item.json.response.text }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are an HR expert and you need to understand if the candidate is in line with the profile sought by the company.\n\nYou must give a rating from 1 to 10 where 1 means that the candidate is not in line with what is required while 10 means that he is the ideal candidate because he/she fully reflects the profile sought. \n\nFurthermore, in the \"consideration\" field, motivate why you gave that rating."
+            }
+          ]
+        }
+      },
+      "id": "cbf5401b-697e-4221-aaa3-92c5826ac32f",
+      "name": "HR Expert",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        2200,
+        520
+      ],
+      "typeVersion": 1.5
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "id": "e8c7a705-f728-4980-ba36-5122b8ccf706",
+      "name": "OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        1560,
+        860
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "EJgMjh9fB0j2lVkm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "The key details for assessing the candidate are gathered from CV\n\n\n\n\n\n\n\n",
+        "height": 500,
+        "width": 360
+      },
+      "id": "18108b3c-bcd9-45ad-ad16-9be2e6b03615",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        760,
+        300
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "Summary of relevant information useful for classifying the candidate",
+        "height": 240,
+        "width": 320
+      },
+      "id": "2fc3d638-3ff4-46fd-953c-6491de7a0d8d",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1500,
+        440
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "Specify the candidate you are looking for in this step / node",
+        "height": 240,
+        "width": 220
+      },
+      "id": "aa7262b2-6d89-476f-8034-de92c02f665c",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1880,
+        440
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "Is the candidate qualified? \n\nScore rating out of 10",
+        "height": 240,
+        "width": 360
+      },
+      "id": "21564cab-b91b-485b-8a2c-cdd3c7a8ec23",
+      "name": "Sticky Note5",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2160,
+        440
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "id": "219fcb85-ee6a-45b3-b9ce-e76bf7642e9c",
+      "name": "Merge Information",
+      "type": "n8n-nodes-base.merge",
+      "position": [
+        1300,
+        520
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"telephone\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n      \"city\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n      \"birthdate\": {\n\t\t\t\"type\": \"string\"\n\t\t}\n\t}\n}",
+        "options": {
+          "systemPromptTemplate": "You are an expert extraction algorithm.\nOnly extract relevant information from the text.\nIf you do not know the value of an attribute asked to extract, you may omit the attribute's value."
+        }
+      },
+      "id": "3c481579-8830-4a7c-a444-cb24cf314c5b",
+      "name": "Extract Personal Data",
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "position": [
+        800,
+        360
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "Educational qualification",
+              "description": "Summary of your academic career. Focus on your high school and university studies. Summarize in 100 words maximum and also include your grade if applicable.",
+              "required": true
+            },
+            {
+              "name": "Job History",
+              "description": "Work history summary. Focus on your most recent work experiences. Summarize in 100 words maximum",
+              "required": true
+            },
+            {
+              "name": "Skills",
+              "description": "Extract the candidate’s technical skills. What software and frameworks they are proficient in. Make a bulleted list.",
+              "required": true
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "You are an expert extraction algorithm.\nOnly extract relevant information from the text.\nIf you do not know the value of an attribute asked to extract, you may omit the attribute's value."
+        }
+      },
+      "id": "2a2ec46f-d321-4a23-a97b-57c11be62622",
+      "name": "Extract Qualifications",
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "position": [
+        800,
+        680
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1NKlh_80sLtj3AP2jzJFcaC6hdXRdixKS8oUFFp1xee8",
+          "mode": "list",
+          "cachedResultName": "Qualified Candidates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NKlh_80sLtj3AP2jzJFcaC6hdXRdixKS8oUFFp1xee8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NKlh_80sLtj3AP2jzJFcaC6hdXRdixKS8oUFFp1xee8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "City ": "={{ $('Merge Information').item.json.output.city }}",
+            "Phone": "={{ $('Merge Information').item.json.output.telephone }}",
+            "Consideration": "={{ $('HR Expert').item.json.output.consideration }}",
+            "Vote": "={{ $('HR Expert').item.json.output.vote }}",
+            "Summary ": "={{ $('Summarization Chain').item.json.response.text }}",
+            "Skills ": "={{ $('Merge Information').item.json.output.Skills }}",
+            "Job HIstory ": "={{ $('Merge Information').item.json.output['Job History'] }}",
+            "Education ": "={{ $('Merge Information').item.json.output['Educational qualification'] }}",
+            "Email": "={{ $json.Email }}",
+            "Date ": "={{ $now.format('yyyy-MM-dd') }}",
+            "Name": "={{ $json.Name }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date ",
+              "displayName": "Date ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "City ",
+              "displayName": "City ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date of Birth",
+              "displayName": "Date of Birth",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Education ",
+              "displayName": "Education ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Job HIstory ",
+              "displayName": "Job HIstory ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Skills ",
+              "displayName": "Skills ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Summary ",
+              "displayName": "Summary ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Vote",
+              "displayName": "Vote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Consideration",
+              "displayName": "Consideration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "useAppend": false
+        }
+      },
+      "id": "29fc38f5-41cc-4556-9295-15da2503686d",
+      "name": "Add info to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [
+        2800,
+        520
+      ],
+      "typeVersion": 4.5,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "attachment_0",
+        "name": "=New CV-{{ $now.format('yyyy/LL/dd') }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1ydu0QiiJe_Vjjdq5D3H8jFpqvWLTtvZs",
+          "mode": "list",
+          "cachedResultName": "Content Automation",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1ydu0QiiJe_Vjjdq5D3H8jFpqvWLTtvZs"
+        },
+        "options": {}
+      },
+      "id": "a7ebaf5b-5a07-43e6-9f5b-b7c1f65024b5",
+      "name": "Upload CV",
+      "type": "n8n-nodes-base.googleDrive",
+      "position": [
+        380,
+        320
+      ],
+      "typeVersion": 3,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "gsn3as2Q8tIloMzv",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "labelIds": [
+            "CHAT"
+          ],
+          "readStatus": "unread"
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        60,
+        440
+      ],
+      "id": "1e3bb61f-0fc0-4648-8c9e-68db8d359fb9",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RxnVylwGtY44Eer9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2eabc54e-078a-4cda-91cd-29d2564af028",
+              "name": "Name",
+              "value": "={{ $('Gmail Trigger').item.json.text.match(/Name:\\s*(.*)/)[1] || \"\" }}",
+              "type": "string"
+            },
+            {
+              "id": "55a34e3f-8329-4dd3-bf29-d01a980236ad",
+              "name": "=Email",
+              "value": "={{ $('Gmail Trigger').item.json.text.match(/Email:\\s*(.*)/)[1] || \"\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2580,
+        520
+      ],
+      "id": "3e3b57e6-76dc-4f74-8869-77f4c445b117",
+      "name": "Extract Email Address and Name from Email Alert"
+    },
+    {
+      "parameters": {
+        "content": "### Upload CV to Google Drive and prepare CV to be processed / see if candidate is qualified or unqualified",
+        "height": 560
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        320,
+        180
+      ],
+      "typeVersion": 1,
+      "id": "8d813f6c-770c-478d-9547-3c1fff373e13",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "### Watches incoming emails into a specific folder in Gmail. \n\nFor this automation the automation assumes there is an alert being sent from something like a form so the format of the email stays consistent. In this case the automation assumes the format in the email looks as follows: \n\nName: Josh Bowing\nEmail: test@gmail.com\n\nWith a CV attached to the email\n\nP.s. you can replace this first node with a form trigger instead like Typeform",
+        "height": 620
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "c371840b-042a-483c-8f17-31a463f95879",
+      "name": "Sticky Note1"
+    }
+  ],
+  "connections": {
+    "OpenAI": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extract Qualifications",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Summarization Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "HR Expert",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Extract Personal Data",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HR Expert": {
+      "main": [
+        [
+          {
+            "node": "Extract Email Address and Name from Email Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Profile Wanted": {
+      "main": [
+        [
+          {
+            "node": "HR Expert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Extract Qualifications",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Personal Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarization Chain": {
+      "main": [
+        [
+          {
+            "node": "Profile Wanted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "HR Expert",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Information": {
+      "main": [
+        [
+          {
+            "node": "Summarization Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Personal Data": {
+      "main": [
+        [
+          {
+            "node": "Merge Information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Qualifications": {
+      "main": [
+        [
+          {
+            "node": "Merge Information",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Upload CV",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Email Address and Name from Email Alert": {
+      "main": [
+        [
+          {
+            "node": "Add info to Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "f2b5eac0-54a2-4d37-881e-5c6b03bdc489",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-03-07T09:38:00.746Z",
+      "createdAt": "2025-03-07T09:38:00.746Z",
+      "role": "workflow:owner",
+      "workflowId": "3k1g9UxDWh1xwi75",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-03-15T18:54:26.296Z",
+      "createdAt": "2025-03-15T18:54:26.296Z",
+      "id": "LcKGzshuAfGAnTK9",
+      "name": "Do sprawdzenia"
+    }
+  ]
+}
