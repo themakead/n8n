@@ -1,0 +1,127 @@
+{
+  "updatedAt": "2025-07-14T16:18:37.528Z",
+  "createdAt": "2025-07-14T15:57:24.704Z",
+  "id": "0xVTzbGqkPg86APX",
+  "name": "My workflow 2",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "729aa63d-9f35-47c4-88e0-39911dcdb47d",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4a380e56-dd39-4832-8945-69a876573109",
+      "name": "Webhook",
+      "webhookId": "729aa63d-9f35-47c4-88e0-39911dcdb47d"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc",
+          "mode": "list",
+          "cachedResultName": "Conversation AI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1856391745,
+          "mode": "list",
+          "cachedResultName": "Arkusz3",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc/edit#gid=1856391745"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "number",
+              "lookupValue": "={{ $json.body.called_number }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        220,
+        0
+      ],
+      "id": "5a7e68b5-0b07-45e4-bec0-665acb73afcb",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"type\": \"conversation_initiation_client_data\",\n  \"dynamic_variables\": {\n    \"message\": \"{{ $json.first_message }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        440,
+        0
+      ],
+      "id": "1e180f64-1ab9-4124-80d4-3cac93954b72",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "42602a14-4b01-4a2c-99c1-e736f5cbda1b",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-07-14T15:57:24.704Z",
+      "createdAt": "2025-07-14T15:57:24.704Z",
+      "role": "workflow:owner",
+      "workflowId": "0xVTzbGqkPg86APX",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
