@@ -1,0 +1,1853 @@
+{
+  "updatedAt": "2025-07-01T11:14:39.592Z",
+  "createdAt": "2025-06-16T10:35:16.737Z",
+  "id": "UWuJEFFMSpk6t2lL",
+  "name": "Koordynator zlecenie USEME",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "message": "=Good to go?\n\n{{ $json.subiect }}\n\n{{ $json.body }}",
+        "responseType": "freeText",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -180,
+        1060
+      ],
+      "id": "6292aa01-48df-46d1-b098-913eca6a0145",
+      "name": "Request Feedback",
+      "webhookId": "da32f9b9-1b07-4e0f-9b5a-55a8c9ab9d59",
+      "credentials": {
+        "telegramApi": {
+          "id": "ZcBiyPgWSHCrT0pX",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Oto post do poprawienia: {{ $('Set Post').item.json.text }}\n\nOto opinia ludzi: {{ $json.data.text }}",
+        "options": {
+          "systemMessage": "=Jesteś ekspertem w pisaniu. Twoim zadaniem jest wzięcie przychodzącego posta i poprawienie go na podstawie opinii przesłanej przez człowieka."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        420,
+        1200
+      ],
+      "id": "86f6962d-8f12-45a7-bdc6-e33d87a76df6",
+      "name": "Revision Agent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9e8ab255-cdd6-4ef1-8950-0482c975d5b9",
+              "name": "subiect",
+              "value": "={{ JSON.parse($json.output).subject }}",
+              "type": "string"
+            },
+            {
+              "id": "09f35d26-fbae-420e-a84f-a4edbc5de9a8",
+              "name": "body",
+              "value": "={{ JSON.parse($json.output).body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -380,
+        1060
+      ],
+      "id": "aa04c1b8-e93d-4e73-a93d-5765a02e49cd",
+      "name": "Set Post"
+    },
+    {
+      "parameters": {
+        "content": "# HITL",
+        "height": 260,
+        "width": 180,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        980
+      ],
+      "id": "11037f49-72d9-48d4-8d15-00da7762059a",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# Set",
+        "height": 260,
+        "width": 180,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -420,
+        980
+      ],
+      "id": "76a6e0ba-93e3-4081-b9bf-74079dd47344",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "# Decyzja",
+        "height": 260,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        980
+      ],
+      "id": "f62e42ca-06ee-461e-9843-a5ac34bd7892",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# Poprawa\n",
+        "height": 220,
+        "width": 360,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        360,
+        1120
+      ],
+      "id": "1e615395-b731-47fd-a742-c76f8795aa06",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "# Content\n",
+        "height": 260,
+        "width": 520,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        980
+      ],
+      "id": "b1d8b67f-cf58-4984-b00e-51cbb0827fc6",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "# AI\n",
+        "height": 220,
+        "width": 440,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        1440
+      ],
+      "id": "aefda3db-7ce8-4c87-98f0-dea86b07a4dc",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.data.text }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "approved",
+              "description": "=Post został sprawdzony i zaakceptowany w obecnej formie. Człowiek wyraźnie lub domyślnie wyraża aprobatę, wskazując, że nie są potrzebne żadne zmiany.\n\nPrzykładowe frazy:\n\n„Wygląda dobrze.”\n„Wyślij to.”\n„To działa dla mnie.”\n„Zatwierdzono.”\n„Nie są potrzebne żadne zmiany.”\n„Super.”\n"
+            },
+            {
+              "category": "declined",
+              "description": "=Post został sprawdzony, ale człowiek prosi o modyfikacje przed wysłaniem, takie jak poprawki, usuwanie części, przeformułowanie itp. Może to obejmować sugerowane edycje, przeformułowanie lub duże zmiany.\n\nPrzykładowe frazy:\n\n„Czy możemy poprawić tę część?”\n„skróć ją”\n„zmień źródło na „American Kennel Club””\n„więcej emotikonów”"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1,
+      "position": [
+        20,
+        1060
+      ],
+      "id": "9874d8af-3235-4391-83b2-6a4f3853d81a",
+      "name": "Text Classifier1"
+    },
+    {
+      "parameters": {
+        "content": "Koordynator\n\n\n\n",
+        "height": 920,
+        "width": 2040,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        760
+      ],
+      "id": "a0bcbbad-6c34-4717-ae87-2e052e3a4ab4",
+      "name": "Sticky Note16"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "gpt-4"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -720,
+        1520
+      ],
+      "id": "99908064-be00-47a3-a22a-33a630401e65",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "EJgMjh9fB0j2lVkm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -940,
+        1060
+      ],
+      "id": "f2fef8e1-245f-4c86-b321-57f884611320",
+      "name": "Telegram Trigger",
+      "webhookId": "f5a5a3f8-9eb1-4abe-86c1-c82c73b1a2c9",
+      "credentials": {
+        "telegramApi": {
+          "id": "ZcBiyPgWSHCrT0pX",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8",
+          "mode": "list",
+          "cachedResultName": "Zlecenie Useme",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1202632276,
+          "mode": "list",
+          "cachedResultName": "Tabela",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit#gid=1202632276"
+        },
+        "options": {}
+      },
+      "id": "43b12f36-7f39-4ca6-a776-43afa2543647",
+      "name": "Get All Prospects",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        380,
+        940
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "1a8d99ce-70b6-4639-a3ed-94c8dc4698cf",
+              "leftValue": "={{ $json.initial_email_sent_date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "46366c55-4aa8-485d-ac4e-758dea585c8a",
+      "name": "IF email not sent yet",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        580,
+        940
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8",
+          "mode": "list",
+          "cachedResultName": "Zlecenie Useme",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1202632276,
+          "mode": "list",
+          "cachedResultName": "Tabela",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit#gid=1202632276"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $json.Email }}",
+            "initial_email_sent_date": "={{ $now.toISODate() }}",
+            "Status": "Kontakt zainicjowany"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Profile URL",
+              "displayName": "Profile URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Average Views",
+              "displayName": "Average Views",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "initial_email_sent_date",
+              "displayName": "initial_email_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "follow_up_1_sent_date",
+              "displayName": "follow_up_1_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "follow_up_2_sent_date",
+              "displayName": "follow_up_2_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false,
+          "values": [
+            {
+              "column": "initial_email_sent",
+              "value": "={{ $now.toISODate() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d11038e0-2977-41bb-8e82-9d609c6f8bd0",
+      "name": "Update Sent Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        840,
+        840
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8",
+          "mode": "list",
+          "cachedResultName": "Zlecenie Useme",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1202632276,
+          "mode": "list",
+          "cachedResultName": "Tabela",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit#gid=1202632276"
+        },
+        "options": {}
+      },
+      "id": "b637aced-6ebd-48ef-b17a-54e99492c664",
+      "name": "Get All Prospects for Follow-up",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        1580,
+        1280
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "3f8ba4a7-93c0-47ef-b18e-7b74693ddd51",
+              "leftValue": "={{ $json.initial_email_sent_date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "1a915eea-8091-4dbc-8422-9bfd1b2ba4ef",
+              "leftValue": "={{ $json.follow_up_1_sent_date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cde361ba-9534-43f5-8a2f-a88eabb01658",
+              "leftValue": "={{ $now.diff($moment($json.initial_email_sent_date), 'days') }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8aded8d4-81fa-4b86-a103-12d9277c495e",
+      "name": "IF needs Follow-up 1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        1180
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8",
+          "mode": "list",
+          "cachedResultName": "Zlecenie Useme",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1202632276,
+          "mode": "list",
+          "cachedResultName": "Tabela",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit#gid=1202632276"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "follow_up_1_sent_date": "{{ $now.toISODate() }}",
+            "Email": "{{ $json.Email }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Profile URL",
+              "displayName": "Profile URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Average Views",
+              "displayName": "Average Views",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "initial_email_sent_date",
+              "displayName": "initial_email_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "follow_up_1_sent_date",
+              "displayName": "follow_up_1_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "follow_up_2_sent_date",
+              "displayName": "follow_up_2_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false,
+          "values": [
+            {
+              "column": "follow_up_1_sent",
+              "value": "={{ $now.toISODate() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "63eb605c-4b4e-4ccd-aee5-eb628c155f48",
+      "name": "Update Follow-up 1 Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        2240,
+        1180
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "9e4ea32c-0e05-447f-bdf2-296e53aea328",
+              "leftValue": "={{ $json.follow_up_1_sent_date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "4edb5949-4015-4e45-9dae-796badeecde5",
+              "leftValue": "={{ $json.follow_up_2_sent_date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "3cda1cac-33cb-4a9b-9ed9-23de11be111c",
+              "leftValue": "={{ $now.diff($moment($json.follow_up_1_sent_date), 'days') }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ef3844a7-b5b9-4876-86c1-1981d1248478",
+      "name": "IF needs Follow-up 2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        1420
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8",
+          "mode": "list",
+          "cachedResultName": "Zlecenie Useme",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1202632276,
+          "mode": "list",
+          "cachedResultName": "Tabela",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit#gid=1202632276"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "follow_up_2_sent_date": "{{ $now.toISODate() }}",
+            "Email": "{{ $json.Email }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Profile URL",
+              "displayName": "Profile URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Average Views",
+              "displayName": "Average Views",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "initial_email_sent_date",
+              "displayName": "initial_email_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "follow_up_1_sent_date",
+              "displayName": "follow_up_1_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "follow_up_2_sent_date",
+              "displayName": "follow_up_2_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false,
+          "values": [
+            {
+              "column": "follow_up_2_sent",
+              "value": "={{ $now.toISODate() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a5e4cbd5-de88-4886-9b21-d3aac57f9aee",
+      "name": "Update Follow-up 2 Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        2240,
+        1420
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.Email }}",
+        "subject": "={{ $('Set Post').item.json.subiect }}",
+        "message": "={{ $('Set Post').item.json.body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        820,
+        1000
+      ],
+      "id": "77280b38-61a2-4eca-a6a6-c4e6781092f9",
+      "name": "Gmail",
+      "webhookId": "e9d63da3-8d72-4e79-bcbf-8c0da893fa55",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RxnVylwGtY44Eer9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.Email }}",
+        "subject": "Re: Nasza poprzednia wiadomość",
+        "message": "=Cześć {{ $json.Name }}, wracam tylko z krótkim przypomnieniem w sprawie mojej poprzedniej wiadomości. Daj proszę znać, czy temat jest dla Ciebie interesujący. Pozdrawiam!",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2060,
+        1180
+      ],
+      "id": "1b777cff-eb11-4cc4-b801-ae619ac1717f",
+      "name": "Gmail1",
+      "webhookId": "300724af-616f-4514-8252-86db4c106cd4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RxnVylwGtY44Eer9",
+          "name": "Gmail account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.Email }}",
+        "subject": "=Re: Nasza poprzednia wiadomość 2",
+        "message": "=Cześć {{ $json.Name }}, wracam tylko z krótkim przypomnieniem w sprawie mojej poprzedniej wiadomości. Daj proszę znać, czy temat jest dla Ciebie interesujący. Pozdrawiam!",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2060,
+        1420
+      ],
+      "id": "a640c5bc-fdb3-48f4-806e-e473e60b825c",
+      "name": "Gmail2",
+      "webhookId": "6dcb8bf9-030f-4a9d-9787-7125f8ed082c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RxnVylwGtY44Eer9",
+          "name": "Gmail account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "Ściecka B",
+        "height": 540,
+        "width": 1420
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1220,
+        1100
+      ],
+      "typeVersion": 1,
+      "id": "bed4a94d-aa76-4d30-8d62-41505920cd2e",
+      "name": "Sticky Note",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "id": "6c9bb885-d60d-46ee-bfb5-a730db7d1ad0",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [
+        -900,
+        1820
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RxnVylwGtY44Eer9",
+          "name": "Gmail account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8",
+          "mode": "list",
+          "cachedResultName": "Zlecenie Useme",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1202632276,
+          "mode": "list",
+          "cachedResultName": "Tabela",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit#gid=1202632276"
+        },
+        "options": {}
+      },
+      "id": "5198130e-d0ff-4bf1-a1f9-e6fb5674be10",
+      "name": "Lookup Prospect Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        -680,
+        1820
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "961c3c6c-0c56-4f15-b7ec-37e8c10a35fd",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "114960f4-5fa8-470c-ad0c-794274d0ff3c",
+      "name": "IF Prospect Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        1820
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8",
+          "mode": "list",
+          "cachedResultName": "Zlecenie Useme",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1202632276,
+          "mode": "list",
+          "cachedResultName": "Tabela",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit#gid=1202632276"
+        }
+      },
+      "id": "73917dd2-1baf-457f-b2ad-e20814afd90e",
+      "name": "Delete Prospect Row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        -240,
+        1820
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "Sprawdzanie odpowiedzi",
+        "height": 320,
+        "width": 1160
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -980,
+        1720
+      ],
+      "typeVersion": 1,
+      "id": "13659055-b5bd-490a-b5cf-07cc25e34789",
+      "name": "Sticky Note9",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -20,
+        1820
+      ],
+      "id": "cbd00e2e-5473-42ba-a3ab-fe3092e66f12",
+      "name": "Gmail3",
+      "webhookId": "dbe05a90-d5ae-4f3d-a3a6-b52511474f21",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RxnVylwGtY44Eer9",
+          "name": "Gmail account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/scraper-mind~instagram-email-scraper/runs?token=***UKRYTY_APIFY***",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"customDomains\": [\"@gmail.com\"],\n  \"keywords\": [\"marketing\", \"beauty\"],\n  \"location\": \"new york\",\n  \"platform\": \"Instagram\",\n  \"proxyConfiguration\": {\n    \"useApifyProxy\": false\n  }\n}",
+        "options": {}
+      },
+      "id": "f74f0521-d4dc-453a-9150-30a800406790",
+      "name": "Start Apify Scraper",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        580,
+        1920
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "=https://api.apify.com/v2/acts/scraper-mind~instagram-email-scraper/runs/last/dataset/items?token=***UKRYTY_APIFY***",
+        "options": {}
+      },
+      "id": "b496f3c2-1494-41ba-84f1-e578504841a4",
+      "name": "Get Scraper Results",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1020,
+        1920
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $json.json.average_views }}",
+              "operation": "larger",
+              "value2": 10000
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "df8637dd-9d74-4367-9b23-a24e6b4bad6f",
+      "name": "IF Average Views > 10k",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1240,
+        1920
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8",
+          "mode": "list",
+          "cachedResultName": "Zlecenie Useme",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1202632276,
+          "mode": "list",
+          "cachedResultName": "Tabela",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit#gid=1202632276"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Profile URL",
+              "displayName": "Profile URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Average Views",
+              "displayName": "Average Views",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "initial_email_sent_date",
+              "displayName": "initial_email_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "follow_up_1_sent_date",
+              "displayName": "follow_up_1_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "follow_up_2_sent_date",
+              "displayName": "follow_up_2_sent_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Notes",
+              "displayName": "Notes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false,
+          "values": [
+            {
+              "column": "Name",
+              "value": "={{ $json.json.name }}"
+            },
+            {
+              "column": "Email",
+              "value": "={{ $json.json.email }}"
+            },
+            {
+              "column": "Profile URL",
+              "value": "={{ $json.json.profile_url }}"
+            },
+            {
+              "column": "Average Views",
+              "value": "={{ $json.json.average_views }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d5dc11cb-69d5-4a91-b30f-7b219f1b2af0",
+      "name": "Add to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        1500,
+        1820
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "string": [
+            {
+              "name": "status",
+              "value": "success"
+            },
+            {
+              "name": "message",
+              "value": "Discovery and vetting process completed. Qualified influencers have been added to the sheet."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "358a582b-b28d-4216-bfce-aef15881eaf0",
+      "name": "Final Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1500,
+        2000
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        1920
+      ],
+      "id": "8c6d993d-0231-4bf1-9f26-9622da0c4307",
+      "name": "Wait",
+      "webhookId": "8cbca098-6a33-45ff-943f-47940cfc1c97",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "Wyszukiwarka influencerów",
+        "height": 500,
+        "width": 1720
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        240,
+        1720
+      ],
+      "typeVersion": 1,
+      "id": "e575a663-c10c-4d18-a8cb-98c3ddcd18f1",
+      "name": "Sticky Note10",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        1360,
+        1280
+      ],
+      "id": "fe668bbc-381e-433f-a396-efdc81b7a167",
+      "name": "Schedule Trigger",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        1920
+      ],
+      "id": "e5ee013e-fe2d-4d00-8163-92c96a5f1586",
+      "name": "Schedule Trigger1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Przejrzyj i ulepsz temat i treść wiadomości e-mail dostarczone przez użytkownika, aby zmaksymalizować zaangażowanie. Sugeruj alternatywne sformułowania, tony i wezwania do działania.\n\nTwoja odpowiedź MUSI być obiektem JSON. To jest krytycznie ważne dla działania systemu. Odpowiedź musi zawierać klucze subject i body. Jeśli nie masz treści dla któregoś z pól, zwróć pusty ciąg znaków\"\", a nie null."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        -760,
+        1060
+      ],
+      "id": "d06e5950-cc40-4712-bcf8-9a8b2b505b82",
+      "name": "AI Agent"
+    }
+  ],
+  "connections": {
+    "Request Feedback": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Revision Agent": {
+      "main": [
+        [
+          {
+            "node": "Set Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Post": {
+      "main": [
+        [
+          {
+            "node": "Request Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier1": {
+      "main": [
+        [
+          {
+            "node": "Get All Prospects",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Revision Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Revision Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Text Classifier1",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Prospects": {
+      "main": [
+        [
+          {
+            "node": "IF email not sent yet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF email not sent yet": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Sent Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Prospects for Follow-up": {
+      "main": [
+        [
+          {
+            "node": "IF needs Follow-up 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF needs Follow-up 1": {
+      "main": [
+        [
+          {
+            "node": "Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF needs Follow-up 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Follow-up 1 Status": {
+      "main": [
+        [
+          {
+            "node": "IF needs Follow-up 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF needs Follow-up 2": {
+      "main": [
+        [
+          {
+            "node": "Gmail2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        []
+      ]
+    },
+    "Gmail1": {
+      "main": [
+        [
+          {
+            "node": "Update Follow-up 1 Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail2": {
+      "main": [
+        [
+          {
+            "node": "Update Follow-up 2 Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Lookup Prospect Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Prospect Row": {
+      "main": [
+        [
+          {
+            "node": "IF Prospect Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Prospect Exists": {
+      "main": [
+        [
+          {
+            "node": "Delete Prospect Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Prospect Row": {
+      "main": [
+        [
+          {
+            "node": "Gmail3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start Apify Scraper": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Scraper Results": {
+      "main": [
+        [
+          {
+            "node": "IF Average Views > 10k",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Average Views > 10k": {
+      "main": [
+        [
+          {
+            "node": "Add to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Final Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get Scraper Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get All Prospects for Follow-up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Start Apify Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Set Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "c304c84a-1f04-475f-a78a-a3bb069b1ec5",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-06-16T10:35:16.737Z",
+      "createdAt": "2025-06-16T10:35:16.737Z",
+      "role": "workflow:owner",
+      "workflowId": "UWuJEFFMSpk6t2lL",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
