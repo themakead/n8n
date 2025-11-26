@@ -1,0 +1,208 @@
+{
+  "updatedAt": "2025-07-14T19:54:50.315Z",
+  "createdAt": "2025-07-14T16:51:35.843Z",
+  "id": "a1MvkOuVwCz5Blk0",
+  "name": "My workflow 2",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "711f68f2-4235-437c-bd24-cc9fd2759cc1",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -340,
+        -300
+      ],
+      "id": "b24e88c5-21d6-42e8-9bd2-5ffc36c5df1c",
+      "name": "Webhook1",
+      "webhookId": "711f68f2-4235-437c-bd24-cc9fd2759cc1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc",
+          "mode": "list",
+          "cachedResultName": "Conversation AI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 475067372,
+          "mode": "list",
+          "cachedResultName": "AI SMS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc/edit#gid=475067372"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Message": "={{ $json.body.Body }}",
+            "From number": "='{{ $json.body.From }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "From number",
+              "displayName": "From number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -80,
+        -300
+      ],
+      "id": "af0795c9-52a7-4fe7-8ba8-2a15748588fc",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        100,
+        -300
+      ],
+      "id": "01d3e418-a79d-4a83-89f5-1a15c599b0bd",
+      "name": "Wait",
+      "webhookId": "29ee2d68-c931-4e76-91d8-9e5d17b24e8e"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc",
+          "mode": "list",
+          "cachedResultName": "Conversation AI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 475067372,
+          "mode": "list",
+          "cachedResultName": "AI SMS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc/edit#gid=475067372"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "From number",
+              "lookupValue": "={{ $('Webhook1').item.json.body.From }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        320,
+        -300
+      ],
+      "id": "dcd41144-a72e-49de-aa77-2f124f2a1bfd",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "c63a4c84-2b6d-43c9-9de4-61c515bb2061",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-07-14T16:51:35.843Z",
+      "createdAt": "2025-07-14T16:51:35.843Z",
+      "role": "workflow:owner",
+      "workflowId": "a1MvkOuVwCz5Blk0",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
