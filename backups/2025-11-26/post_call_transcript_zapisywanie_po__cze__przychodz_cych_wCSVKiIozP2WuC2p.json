@@ -1,0 +1,193 @@
+{
+  "updatedAt": "2025-07-14T20:22:06.011Z",
+  "createdAt": "2025-07-13T07:54:38.609Z",
+  "id": "wCSVKiIozP2WuC2p",
+  "name": "POST CALL TRANSCRIPT Zapisywanie połączeń przychodzących",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "d328dce1-6368-43f0-8823-eac8f699b3b3",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2dbd5d9b-4f41-408b-aae5-edbf216bd9da",
+      "name": "Webhook",
+      "webhookId": "d328dce1-6368-43f0-8823-eac8f699b3b3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pobierz dane wejściowe\nconst items = $input.all();\n\nconst output = items.map(item => {\n  const body = item.json.body;\n  const transcriptArray = body?.data?.transcript || [];\n\n  // Zbuduj czysty tekst\n  const transcriptText = transcriptArray.map(entry => {\n    return `${entry.role}: ${entry.message}`;\n  }).join('\\n');\n\n  return {\n    json: {\n      conversation_id: body?.data?.conversation_id || '',\n      transcriptText: transcriptText\n    }\n  };\n});\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "66626b88-31e9-464f-8d4c-0fdcb9e87a5f",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc",
+          "mode": "list",
+          "cachedResultName": "Conversation AI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 820043770,
+          "mode": "list",
+          "cachedResultName": "post_call",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc/edit#gid=820043770"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{\n  (() => {\n    const date = new Date($('Webhook').item.json.body.event_timestamp * 1000)\n      .toLocaleString('pl-PL', { timeZone: 'Europe/Warsaw' });\n\n    const [day, month, year] = date.split(',')[0].split('.');\n    const time = date.split(',')[1].trim();\n\n    const [hour, minute] = time.split(':');\n\n    return `${day}${month}${year.slice(-2)} ${hour}:${minute}`;\n  })()\n}}\n",
+            "direction": "={{ $('Webhook').item.json.body.data.metadata.phone_call.direction }}",
+            "to number": "={{ $('Webhook').item.json.body.data.metadata.phone_call.agent_number }}",
+            "from number": "={{ $('Webhook').item.json.body.data.metadata.phone_call.external_number }}",
+            "transcript": "={{ $json.transcriptText }}",
+            "summary": "={{ $('Webhook').item.json.body.data.analysis.transcript_summary }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "direction",
+              "displayName": "direction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "to number",
+              "displayName": "to number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "from number",
+              "displayName": "from number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "transcript",
+              "displayName": "transcript",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        440,
+        0
+      ],
+      "id": "254c69b3-ff6e-4f92-be0e-657437789fbd",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "d4f46ef2-89c5-4720-a97d-1ed8c8571ef4",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-07-13T07:54:38.609Z",
+      "createdAt": "2025-07-13T07:54:38.609Z",
+      "role": "workflow:owner",
+      "workflowId": "wCSVKiIozP2WuC2p",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
