@@ -1,0 +1,320 @@
+{
+  "updatedAt": "2025-03-17T10:25:38.746Z",
+  "createdAt": "2025-03-17T10:25:35.345Z",
+  "id": "2GluyRrndaGkLoRS",
+  "name": "Czat AI na Twojej stronie",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "mode": "webhook",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7aedf4fb-f4ef-4357-906a-8c11a7232e48",
+      "name": "When chat message received",
+      "webhookId": "65afb57e-1c89-44a3-b9bb-84013a4511d7"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "=You are an AI chatbot assisting users on a website. Follow these instructions carefully.\n\n###Tools\n- Call the invoice_generator tool to create an invoice. You must have the user's name and email before generating an invoice. Only call this tool if the user asks for you to send it.\n\n###Rules\n1. After generating an invoice, make sure to send the invoice back to the user. The invoice_generator tool should provide the link. Here's an example of what the invoice URL looks like: \"https://link.automatable.co/l/03oLUQ5CTF\" \n2. If this is a new conversation, start by asking for the user’s name and email, then how you can help them today.\n3. Ask for these details separately (i.e., in two different questions).\nAppointment Booking\n4. If the user wants to book a call or meeting, direct them to: https://abccompany.com/booking.\n5. Only call the invoice_generator tool if the user asks to generate an invoice"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        220,
+        0
+      ],
+      "id": "bbfc0dd9-893a-49e3-b5f1-f14bd7fd5fdb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        60,
+        220
+      ],
+      "id": "fdd6a9a4-c172-4625-8dcb-341bdfb78129",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        200,
+        220
+      ],
+      "id": "da951a4a-478f-4e2b-93fe-8030c579a1f7",
+      "name": "Window Buffer Memory"
+    },
+    {
+      "parameters": {
+        "name": "invoice_generator",
+        "description": "Call this tool when the user wants to generate an invoice",
+        "workflowId": {
+          "__rl": true,
+          "value": "B89SA6aiCkyS2xWL",
+          "mode": "list",
+          "cachedResultName": "Invoice"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{ $fromAI(\"email\", \"This is the users email\") }}",
+            "name": "={{ $fromAI(\"name\", \"This is the users name\") }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2,
+      "position": [
+        380,
+        220
+      ],
+      "id": "9eacf02f-d664-4ea0-a715-cd16f4304500",
+      "name": "Invoice Generator"
+    },
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"name\": \"Jono\",\n  \"email\": \"jonocatliff@gmail.com\"\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -40,
+        420
+      ],
+      "id": "874fe206-9186-4774-97c4-5174cb93f011",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/hooks/YSbF1AQMdKi3GOFfqwTQ/webhook-trigger/<Your_URL_Here>",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.email }}"
+            },
+            {
+              "name": "webhook_url",
+              "value": "={{ $execution.resumeUrl }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        420
+      ],
+      "id": "76246cfe-766d-4d11-b9ab-080bb0c7bc6c",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "httpMethod": "POST",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        420
+      ],
+      "id": "bf14ff73-7702-4d5e-bf26-cca014af17c0",
+      "name": "Wait",
+      "webhookId": "c722de89-86b5-40dc-aa25-99f6bda09620"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8940549f-ee2a-4e6a-8d01-88a7049ba7d0",
+              "name": "invoice",
+              "value": "={{ $json.body.customData.invoice }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        420
+      ],
+      "id": "3282694a-1942-4c2b-8871-8fd61cab22e6",
+      "name": "Edit Fields"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invoice Generator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "name": "Jono",
+          "email": "jonocatliff@gmail.com"
+        }
+      }
+    ]
+  },
+  "versionId": "dfa14152-503e-451d-b3b1-a2be2532dc50",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-03-17T10:25:35.345Z",
+      "createdAt": "2025-03-17T10:25:35.345Z",
+      "role": "workflow:owner",
+      "workflowId": "2GluyRrndaGkLoRS",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-03-15T18:54:26.296Z",
+      "createdAt": "2025-03-15T18:54:26.296Z",
+      "id": "LcKGzshuAfGAnTK9",
+      "name": "Do sprawdzenia"
+    }
+  ]
+}
