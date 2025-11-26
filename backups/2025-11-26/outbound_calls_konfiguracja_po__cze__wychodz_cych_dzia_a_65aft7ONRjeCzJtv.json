@@ -1,0 +1,146 @@
+{
+  "updatedAt": "2025-07-14T20:04:13.683Z",
+  "createdAt": "2025-07-13T12:44:21.300Z",
+  "id": "65aft7ONRjeCzJtv",
+  "name": "OUTBOUND CALLS Konfiguracja połączeń wychodzących DZIAŁA",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e019cf92-b26e-4f8e-bd77-8db3012fe33f",
+      "name": "When chat message received",
+      "webhookId": "2bebe648-88f7-4052-b4a1-ae10023fab65"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc",
+          "mode": "list",
+          "cachedResultName": "Conversation AI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1856391745,
+          "mode": "list",
+          "cachedResultName": "Arkusz3",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11AnuyJSH2JC4VWQFJKbxBX0VGWwN__y2P1EdsZ-LVgc/edit#gid=1856391745"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        220,
+        0
+      ],
+      "id": "e82fa44f-5123-42d5-8cc3-e530d25e364b",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/convai/twilio/outbound-call",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "xi-api-key",
+              "value": "sk_74c183dd82e20f3d83354a4b422893c7ded72d44e051d10e"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "agent_id",
+              "value": "agent_01jzz2ss5qeh1vb3tk26hbsjcj"
+            },
+            {
+              "name": "agent_phone_number_id",
+              "value": "phnum_01k01tpxn9fg8taez03qhq61dc"
+            },
+            {
+              "name": "to_number",
+              "value": "={{ $json.number.toString() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "2f187e4f-2d82-4bfd-b233-f6c265c5bfab",
+      "name": "HTTP Request"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "cc464d0e-9b7c-4686-b4af-82f44a43447e",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-07-13T12:44:21.300Z",
+      "createdAt": "2025-07-13T12:44:21.300Z",
+      "role": "workflow:owner",
+      "workflowId": "65aft7ONRjeCzJtv",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
