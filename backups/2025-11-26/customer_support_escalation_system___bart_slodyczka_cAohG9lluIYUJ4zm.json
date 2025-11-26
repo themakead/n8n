@@ -1,0 +1,471 @@
+{
+  "updatedAt": "2025-07-18T08:08:51.856Z",
+  "createdAt": "2025-07-18T08:05:55.291Z",
+  "id": "cAohG9lluIYUJ4zm",
+  "name": "Customer Support Escalation System - Bart Slodyczka",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": "REDACTED",
+        "sheetName": "REDACTED",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -816,
+        -320
+      ],
+      "id": "c4a2a129-29f9-4554-bce1-5d65df3cd22e",
+      "name": "Get row(s) in sheet"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Escalated Query:\n\n<query>\n{{ $json.message }}\n</query>\n\n<ticketid>\n{{ $json['ticket id'] }}\n</ticketid>",
+        "options": {
+          "systemMessage": "=You are an escalation assistant\n\nRead the escalated query and propose a resolution\nYour resolution with be reviewed by a human CSM\n\nAlways call the 'known_issues' tool to learn about any issues that may be impacting service levels\n\nAlways call the 'order_tracking' tool to see if there is tracking information relevant to the customer order\n\nYou have the power to:\n- Offer a 10% refund for customers who are really upset\n- Offer a 50% refund if the customer says they will leave a bad review\n- If an item arrived with missing parts, first try to offer to send the missing parts. If the customer is very upset, offer to send a new item free of charge.\n\nOutput your response as a concise summary and set of bullet points (resolutions). This will be reviewed by a human\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -672,
+        -320
+      ],
+      "id": "06bfc91f-9ed3-4051-8933-5e92a02b7261",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -704,
+        -112
+      ],
+      "id": "99f84ea5-2b74-4b62-9456-3c8f987d457a",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "documentId": "REDACTED",
+        "sheetName": "REDACTED",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        -400,
+        -80
+      ],
+      "id": "10d4c8ba-6f19-478e-9e6d-3ec68094294a",
+      "name": "order_tracking"
+    },
+    {
+      "parameters": {
+        "documentId": "REDACTED",
+        "sheetName": "REDACTED",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.6,
+      "position": [
+        -544,
+        -80
+      ],
+      "id": "84e8cb39-7ce7-47c3-a5ee-09d12fed478e",
+      "name": "known_issues"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "REDACTED",
+        "subject": "Approval Required",
+        "message": "=Your approval is required for the below:\n\n{{ $json.output }}\n\nPlease respond with any feedback and the status of your approval.",
+        "responseType": "freeText",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -224,
+        -80
+      ],
+      "id": "8244978f-0500-4e81-ac1b-566dccb9cb23",
+      "name": "Send a message",
+      "webhookId": "REDACTED"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "REDACTED",
+              "leftValue": "={{ $json.data.text }}",
+              "rightValue": "=approved|Approved",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -80,
+        -80
+      ],
+      "id": "ee5e7864-ca52-4218-96e7-e3b514198301",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=## Escalated Query\n\n<query>\n{{ $('Get row(s) in sheet').item.json.message }}\n</query>\n\n<ticketid>\n{{ $('Get row(s) in sheet').item.json['ticket id'] }}\n</ticketid>\n\n## Proposed Resolution\n\n<proposed>\n{{ $('AI Agent').item.json.output }}\n</prosposed>\n\n## Human Feedback\n\n<human>\n{{ $json.data.text }}\n<human>",
+        "options": {
+          "systemMessage": "=You are part of an escalations team\nYou receive approved escalations and you generate responses to them\n\nYou receive the original escalation ticket details, the proposal on how to resolve the issue, as well as the human CSM feedback\n\nGenerate your reply for email format\n\nNote your response is the final response to resolve the issue\nNo further contact will be made with the customer\n\nKeep your reply short. "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        176,
+        -320
+      ],
+      "id": "52d0fea7-1f2f-4439-b469-4e3c83255640",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-20250514",
+          "cachedResultName": "Claude 4 Sonnet"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        144,
+        -160
+      ],
+      "id": "e6e7f9fd-9d3c-4c53-8093-bf98a1d87fbb",
+      "name": "Anthropic Chat Model"
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "operation": "__CUSTOM_API_CALL__"
+      },
+      "type": "n8n-nodes-base.shopifyTool",
+      "typeVersion": 1,
+      "position": [
+        416,
+        -144
+      ],
+      "id": "18eb41d4-2ade-409f-9403-b7b86311f2d5",
+      "name": "Shopify Tool"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        496,
+        -320
+      ],
+      "id": "4c17e984-71e8-458a-8a70-edba84d3b365",
+      "name": "Respond"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        -320
+      ],
+      "id": "2a9b8b43-dbe1-4005-aca0-abcc1709dd5c",
+      "name": "Start"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=## Escalated Query\n\n<query>\n{{ $('Get row(s) in sheet').item.json.message }}\n</query>\n\n<ticketid>\n{{ $('Get row(s) in sheet').item.json['ticket id'] }}\n</ticketid>\n\n## Proposed Resolution\n\n<proposed>\n{{ $('AI Agent').item.json.output }}\n</prosposed>\n\n## Human Feedback\n\n<human>\n{{ $json.data.text }}\n<human>",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are part of an escalations team  You receive the original escalation ticket details, the proposal on how to resolve the issue, as well as the human CSM feedback  You always work with proposals that were denied by the human  Your job is to take the proposal and update it as per human feedback. Then output the revised proposal.   Keep everything the same aside from the changes you made"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        144,
+        16
+      ],
+      "id": "c933e2e0-4d3a-4bbd-8bd7-014b50d502b5",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        176
+      ],
+      "id": "8ed208d3-3d68-40b6-a1d9-b474f6c171c7",
+      "name": "OpenAI Chat Model1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        496,
+        144
+      ],
+      "id": "d7a71fac-a7e0-47d8-9e3b-39142dedea3e",
+      "name": "Flow Control"
+    },
+    {
+      "parameters": {
+        "content": "https://www.youtube.com/watch?v=FDQ6iYayKJY"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1312,
+        96
+      ],
+      "typeVersion": 1,
+      "id": "5f0f86ac-1955-4e58-b9cc-0cf2e4fe0cfe",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "order_tracking": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "known_issues": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Flow Control",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flow Control": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "ea4a3157-1bc4-4908-96f3-c70a58adcba9",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-07-18T08:05:55.291Z",
+      "createdAt": "2025-07-18T08:05:55.291Z",
+      "role": "workflow:owner",
+      "workflowId": "cAohG9lluIYUJ4zm",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-03-15T18:54:26.296Z",
+      "createdAt": "2025-03-15T18:54:26.296Z",
+      "id": "LcKGzshuAfGAnTK9",
+      "name": "Do sprawdzenia"
+    }
+  ]
+}
