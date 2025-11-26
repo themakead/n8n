@@ -1,0 +1,464 @@
+{
+  "updatedAt": "2025-06-16T18:31:49.467Z",
+  "createdAt": "2025-06-16T12:48:26.046Z",
+  "id": "Gf0pbekaskMyiogY",
+  "name": "Wysyłka Masowa i Sekwencja Follow-up",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8",
+          "mode": "list",
+          "cachedResultName": "Zlecenie Useme",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1202632276,
+          "mode": "list",
+          "cachedResultName": "Tabela",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1VwIvgX4OA7UFRI6lbpt2kNh0S4GNsJrCkUhUTz48YB8/edit#gid=1202632276"
+        },
+        "options": {}
+      },
+      "id": "91d9fa87-7246-43b2-80e7-7ac9f465929f",
+      "name": "Get All Prospects",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        260,
+        100
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.json.initial_email_sent }}",
+              "operation": "isEmpty"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5a85673e-4d93-4102-8cc8-15335861741c",
+      "name": "IF email not sent yet",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        460,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": "YOUR_GOOGLE_SHEET_ID",
+        "sheetName": "YOUR_SHEET_NAME",
+        "columns": {
+          "values": [
+            {
+              "column": "initial_email_sent",
+              "value": "={{ $now.toISODate() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d0273ffd-40b1-484d-8318-19e4b51b110f",
+      "name": "Update Sent Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        920,
+        100
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "0AifnrCkRyhR2h3u",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "5d909f1d-c820-4798-ad2c-a2fb302b3ace",
+      "name": "Schedule Follow-up Check",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 2,
+      "position": [
+        80,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "documentId": "YOUR_GOOGLE_SHEET_ID"
+      },
+      "id": "751b15d7-c05f-420f-b9c7-341bcec04202",
+      "name": "Get All Prospects for Follow-up",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        300,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.json.initial_email_sent !== '' }}",
+              "value2": "={{ $json.json.follow_up_1_sent === '' }}"
+            }
+          ],
+          "date": [
+            {
+              "value1": "={{ $now }}",
+              "operation": "after",
+              "value2": "={{ $moment($json.json.initial_email_sent).add(3, 'days') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f66a533e-6311-4c06-9010-0aa8b26bf472",
+      "name": "IF needs Follow-up 1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        520,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": "YOUR_GOOGLE_SHEET_ID",
+        "sheetName": "YOUR_SHEET_NAME",
+        "columns": {
+          "values": [
+            {
+              "column": "follow_up_1_sent",
+              "value": "={{ $now.toISODate() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5308151b-0be7-4beb-afe9-e14a7e658485",
+      "name": "Update Follow-up 1 Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        960,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.json.follow_up_1_sent !== '' }}",
+              "value2": "={{ $json.json.follow_up_2_sent === '' }}"
+            }
+          ],
+          "date": [
+            {
+              "value1": "={{ $now }}",
+              "operation": "after",
+              "value2": "={{ $moment($json.json.follow_up_1_sent).add(2, 'days') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "765c22b6-16b6-4adf-a23d-a73ef38c3113",
+      "name": "IF needs Follow-up 2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        540,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": "YOUR_GOOGLE_SHEET_ID",
+        "sheetName": "YOUR_SHEET_NAME",
+        "columns": {
+          "values": [
+            {
+              "column": "follow_up_2_sent",
+              "value": "={{ $now.toISODate() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0aee85f8-c53d-4367-9b7d-46a8e35ff40c",
+      "name": "Update Follow-up 2 Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.3,
+      "position": [
+        960,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Ściecka B",
+        "height": 420,
+        "width": 1420
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -60,
+        380
+      ],
+      "typeVersion": 1,
+      "id": "afb312be-023e-45b4-8f7e-e74638db1760",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Ścieżka A",
+        "height": 300,
+        "width": 1200
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -40,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "c18967de-d291-4f85-a2d5-b801df404c45",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        40,
+        100
+      ],
+      "id": "e9c8e65b-c7bd-40ca-acd2-5a37f442aa80",
+      "name": "When chat message received",
+      "webhookId": "61dfee3f-c08c-470b-b2a1-e88daeae0f33"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        700,
+        100
+      ],
+      "id": "21649112-4eaf-4bdb-86e8-ada943491fab",
+      "name": "Gmail",
+      "webhookId": "e9d63da3-8d72-4e79-bcbf-8c0da893fa55",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RxnVylwGtY44Eer9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        780,
+        400
+      ],
+      "id": "da8d30fe-41c2-43e1-b138-8155c1f9614f",
+      "name": "Gmail1",
+      "webhookId": "300724af-616f-4514-8252-86db4c106cd4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RxnVylwGtY44Eer9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        780,
+        640
+      ],
+      "id": "41c18ea0-5a9d-4b4e-8a05-074c18109025",
+      "name": "Gmail2",
+      "webhookId": "6dcb8bf9-030f-4a9d-9787-7125f8ed082c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "RxnVylwGtY44Eer9",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Get All Prospects": {
+      "main": [
+        [
+          {
+            "node": "IF email not sent yet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Prospects for Follow-up": {
+      "main": [
+        [
+          {
+            "node": "IF needs Follow-up 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF needs Follow-up 1": {
+      "main": [
+        [
+          {
+            "node": "Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF needs Follow-up 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Follow-up 1 Status": {
+      "main": [
+        [
+          {
+            "node": "IF needs Follow-up 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Get All Prospects",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        [
+          {
+            "node": "Update Sent Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF email not sent yet": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail1": {
+      "main": [
+        [
+          {
+            "node": "Update Follow-up 1 Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail2": {
+      "main": [
+        [
+          {
+            "node": "Update Follow-up 2 Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF needs Follow-up 2": {
+      "main": [
+        [
+          {
+            "node": "Gmail2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "4ac9b860-e25f-41e5-b1ba-9f1508dfb039",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-06-16T12:48:26.046Z",
+      "createdAt": "2025-06-16T12:48:26.046Z",
+      "role": "workflow:owner",
+      "workflowId": "Gf0pbekaskMyiogY",
+      "projectId": "SQnOb1XW8PKTppQP"
+    }
+  ],
+  "tags": []
+}
